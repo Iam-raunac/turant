@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { generateCart, recordOrder, getProfile } from "./api.js";
+import { generateCart, recordOrder, getProfile, recordRemoval } from "./api.js";
 import Header from "./components/Header.jsx";
 import HeroInput from "./components/HeroInput.jsx";
 import SampleChips from "./components/SampleChips.jsx";
@@ -13,6 +13,8 @@ import ClarifyingQuestion from "./components/ClarifyingQuestion.jsx";
 import RefineBar from "./components/RefineBar.jsx";
 import OrderConfirmation from "./components/OrderConfirmation.jsx";
 import ErrorBanner from "./components/ErrorBanner.jsx";
+import NeighborhoodPulse from "./components/NeighborhoodPulse.jsx";
+import SmartSubstitution from "./components/SmartSubstitution.jsx";
 
 const SAMPLE_PROMPTS = [
   "light chali gayi, monsoon hai bahar, ghar pe kuch nahi hai",
@@ -49,6 +51,7 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [ordered, setOrdered] = useState(null);
+  const [feedbackNote, setFeedbackNote] = useState(null);
 
   const refreshProfile = useCallback(async (uid) => {
     if (!uid) {
@@ -94,6 +97,7 @@ export default function App() {
     setError(null);
     setResult(null);
     setOrdered(null);
+    setFeedbackNote(null);
 
     const payload = { user_text: text };
     if (user.id) payload.user_id = user.id;
@@ -151,6 +155,61 @@ export default function App() {
     setOrdered(null);
     setUserText("");
     setError(null);
+    setFeedbackNote(null);
+  }
+
+  function withRecalculatedTotal(cart, items) {
+    return {
+      ...cart,
+      items,
+      total_inr: items.reduce((s, i) => s + (i.price_inr || 0), 0),
+    };
+  }
+
+  // Smart Substitution — accept the proposed swap for an out-of-stock item.
+  function applySubstitute(targetId, substituteItem) {
+    if (!result?.items) return;
+    const items = result.items.map((it) =>
+      it.product_id === targetId ? substituteItem : it
+    );
+    setResult(withRecalculatedTotal(result, items));
+  }
+
+  // Smart Substitution — user declined the swap; drop the OOS item.
+  function dropItem(targetId) {
+    if (!result?.items) return;
+    const items = result.items.filter((it) => it.product_id !== targetId);
+    setResult(withRecalculatedTotal(result, items));
+  }
+
+  // Confidence Feedback Loop — remove an item and store it as a negative signal.
+  async function removeItem(item) {
+    if (!result?.items) return;
+    const items = result.items.filter((it) => it.product_id !== item.product_id);
+    setResult(withRecalculatedTotal(result, items));
+
+    const context = result.cart_title || result.situation_understood || null;
+    if (user.id) {
+      setFeedbackNote(
+        `📝 Noted — Turant won't suggest ${item.name}${
+          context ? ` for "${context}"` : ""
+        } next time.`
+      );
+      try {
+        await recordRemoval({
+          userId: user.id,
+          items: [{ product_id: item.product_id, name: item.name }],
+          context,
+        });
+        await refreshProfile(user.id);
+      } catch (err) {
+        console.error("record removal failed", err);
+      }
+    } else {
+      setFeedbackNote(
+        `Removed ${item.name}. Sign in so Turant remembers this preference next time.`
+      );
+    }
   }
 
   const showHome = !result && !loading && !ordered;
@@ -164,6 +223,11 @@ export default function App() {
           <section className="hero">
             <Identity user={user} onSignIn={signIn} onSignOut={signOut} />
             <LearnedStrip profile={profile} />
+
+            <NeighborhoodPulse
+              city={profile?.city}
+              onTrigger={(prompt) => submit(prompt, "single")}
+            />
 
             <h1 className="hero-title">
               Need something urgently? <span className="accent">Just say it.</span>
@@ -220,14 +284,26 @@ export default function App() {
 
             {result.response_type === "best_guess" && (
               <>
-                <Cart cart={result} variant="best_guess" onOrder={() => placeOrder(result)} />
+                <SmartSubstitution
+                  cart={result}
+                  onApply={applySubstitute}
+                  onDrop={dropItem}
+                />
+                <Cart cart={result} variant="best_guess" onOrder={() => placeOrder(result)} onRemove={removeItem} />
+                {feedbackNote && <div className="feedback-note">{feedbackNote}</div>}
                 <RefineBar onRefine={refine} />
               </>
             )}
 
             {result.response_type === "confident" && (
               <>
-                <Cart cart={result} variant="confident" onOrder={() => placeOrder(result)} />
+                <SmartSubstitution
+                  cart={result}
+                  onApply={applySubstitute}
+                  onDrop={dropItem}
+                />
+                <Cart cart={result} variant="confident" onOrder={() => placeOrder(result)} onRemove={removeItem} />
+                {feedbackNote && <div className="feedback-note">{feedbackNote}</div>}
                 <RefineBar onRefine={refine} />
               </>
             )}

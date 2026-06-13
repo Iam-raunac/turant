@@ -4,7 +4,7 @@
 // Every response carries _source: "live" | "mock" | "mock-fallback" so the UI
 // can show the user which backend they're hitting.
 
-import { mockGenerate, mockRecordOrder, mockGetProfile } from "./mock.js";
+import { mockGenerate, mockRecordOrder, mockGetProfile, mockRecordRemoval, mockGetSubstitute } from "./mock.js";
 
 const API_URL = (import.meta.env.VITE_API_URL || "").trim();
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "1";
@@ -71,5 +71,33 @@ export async function getProfile(userId) {
   } catch (err) {
     console.error("[Turant] get_profile failed, using mock:", err);
     return { ...(await mockGetProfile(payload)), _source: "mock-fallback", _error: err.message };
+  }
+}
+
+// Confidence Feedback Loop — record an item the user removed (negative signal).
+export async function recordRemoval({ userId, items, context }) {
+  const payload = { action: "record_removal", user_id: userId, items, context };
+  if (USE_MOCK || !API_URL) {
+    return { ...(await mockRecordRemoval(payload)), _source: "mock" };
+  }
+  try {
+    return { ...(await postJson(payload)), _source: "live" };
+  } catch (err) {
+    console.error("[Turant] record_removal failed, using mock:", err);
+    return { ...(await mockRecordRemoval(payload)), _source: "mock-fallback", _error: err.message };
+  }
+}
+
+// Smart Substitution — ask the backend for the best swap for an OOS product.
+export async function getSubstitute({ productId, excludeIds }) {
+  const payload = { action: "substitute", product_id: productId, exclude_ids: excludeIds };
+  if (USE_MOCK || !API_URL) {
+    return { ...(await mockGetSubstitute(payload)), _source: "mock" };
+  }
+  try {
+    return { ...(await postJson(payload)), _source: "live" };
+  } catch (err) {
+    console.error("[Turant] substitute failed, using mock:", err);
+    return { ...(await mockGetSubstitute(payload)), _source: "mock-fallback", _error: err.message };
   }
 }

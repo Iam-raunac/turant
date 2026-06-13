@@ -2,6 +2,8 @@
 // Also implements REAL learning in localStorage: ordering items records them,
 // and future carts surface the user's frequently-ordered items first.
 
+import { findSubstitute } from "./catalog.js";
+
 const SAFETY_NOTE =
   "This is not medical advice. Consult a doctor if symptoms persist beyond 48 hours or worsen. We only suggest OTC products available without a prescription.";
 
@@ -13,9 +15,10 @@ function loadHistory(userId) {
       order_count: 0,
       item_counts: {},
       item_names: {},
+      disliked_items: {},
     };
   } catch {
-    return { order_count: 0, item_counts: {}, item_names: {} };
+    return { order_count: 0, item_counts: {}, item_names: {}, disliked_items: {} };
   }
 }
 
@@ -141,22 +144,27 @@ function clone(obj) {
 
 // Re-rank only: boost items the cart ALREADY contains that the user buys often.
 // Never pads the cart with unrelated favorites — relevance stays intact.
+// Also drops items the user has previously removed (Confidence Feedback Loop).
 function applyLearning(cart, userId) {
   if (!cart.items) return cart;
+  const hist = loadHistory(userId);
+  const disliked = hist.disliked_items || {};
+
+  // Confidence Feedback Loop: honor negative signals.
+  cart.items = cart.items.filter((it) => !disliked[it.product_id]);
+
   const learned = topLearned(userId, 8);
-  if (!learned.length) return cart;
+  if (learned.length) {
+    cart.items.forEach((it) => {
+      const hit = learned.find((l) => l.product_id === it.product_id);
+      if (hit) {
+        it.personalized = true;
+        it.reason = `${it.reason} You order this often (${hit.count}×).`;
+        cart.personalization_applied = true;
+      }
+    });
+  }
 
-  let applied = false;
-  cart.items.forEach((it) => {
-    const hit = learned.find((l) => l.product_id === it.product_id);
-    if (hit) {
-      it.personalized = true;
-      it.reason = `${it.reason} You order this often (${hit.count}×).`;
-      applied = true;
-    }
-  });
-
-  cart.personalization_applied = applied;
   cart.total_inr = cart.items.reduce((s, i) => s + (i.price_inr || 0), 0);
   return cart;
 }
@@ -211,12 +219,45 @@ export async function mockGetProfile(payload) {
   await new Promise((r) => setTimeout(r, 150));
   const uid = payload.user_id;
   const hist = loadHistory(uid);
-  if (!hist.order_count) return { exists: false, user_id: uid };
+  if (!hist.order_count && !Object.keys(hist.disliked_items || {}).length) {
+    return { exists: false, user_id: uid };
+  }
   return {
     exists: true,
     user_id: uid,
     order_count: hist.order_count,
     item_counts: hist.item_counts,
     item_names: hist.item_names,
+    disliked_items: hist.disliked_items || {},
   };
+}
+
+// Confidence Feedback Loop — store a removed item as a negative signal.
+export async function mockRecordRemoval(payload) {
+  await new Promise((r) => setTimeout(r, 200));
+  const uid = payload.user_id;
+  const hist = loadHistory(uid);
+  hist.disliked_items = hist.disliked_items || {};
+  (payload.items || []).forEach((it) => {
+    const pid = it.product_id || it.name;
+    if (!pid) return;
+    const entry = hist.disliked_items[pid] || { name: it.name || pid, count: 0 };
+    entry.count += 1;
+    entry.name = it.name || entry.name || pid;
+    if (payload.context) entry.last_context = payload.context;
+    hist.disliked_items[pid] = entry;
+  });
+  saveHistory(uid, hist);
+  return {
+    status: "removal_recorded",
+    user_id: uid,
+    disliked_items: hist.disliked_items,
+  };
+}
+
+// Smart Substitution — best in-catalog swap for an out-of-stock product.
+export async function mockGetSubstitute(payload) {
+  await new Promise((r) => setTimeout(r, 200));
+  const substitute = findSubstitute(payload.product_id, payload.exclude_ids || []);
+  return { product_id: payload.product_id, substitute };
 }

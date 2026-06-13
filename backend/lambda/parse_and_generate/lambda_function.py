@@ -132,6 +132,83 @@ def record_order(user_id, items, name=None):
     return profile
 
 
+def record_removal(user_id, items, context=None):
+    """Feature: Confidence Feedback Loop.
+
+    When a user removes an item from a generated cart, store it as a NEGATIVE
+    signal so future carts avoid it. Keeps a running tally per product plus the
+    situation context in which it was removed (e.g. "Dinner for Guests"), so
+    the system can learn things like "this user doesn't serve sweets to guests".
+    Auto-creates the profile if the user has never ordered.
+    """
+    table = dynamodb.Table(USER_PREFS_TABLE)
+    existing = table.get_item(Key={"user_id": user_id}).get("Item") or {}
+
+    disliked = existing.get("disliked_items") or {}
+    removed_categories = existing.get("removed_category_counts") or {}
+
+    catalog_by_id = {p["product_id"]: p for p in get_full_catalog()}
+
+    for it in items:
+        pid = it.get("product_id") or it.get("name")
+        if not pid:
+            continue
+        entry = disliked.get(pid) or {"name": it.get("name", pid), "count": 0}
+        entry["count"] = int(entry.get("count", 0)) + 1
+        entry["name"] = it.get("name", entry.get("name", pid))
+        if context:
+            entry["last_context"] = context
+        disliked[pid] = entry
+
+        category = (catalog_by_id.get(pid) or {}).get("category", "general")
+        removed_categories[category] = int(removed_categories.get(category, 0)) + 1
+
+    existing["user_id"] = user_id
+    existing["disliked_items"] = disliked
+    existing["removed_category_counts"] = removed_categories
+    table.put_item(Item=existing)
+    return existing
+
+
+def find_substitute(product_id, catalog, exclude_ids=None):
+    """Feature: Smart Substitution.
+
+    Given an out-of-stock product, find the best in-catalog alternative:
+    ranked by tag overlap (semantic similarity) first, then same-category,
+    then closest price. Falls back to same category if nothing shares a tag.
+    Returns the full catalog product dict (or None if no sensible swap exists).
+    """
+    exclude = set(exclude_ids or [])
+    exclude.add(product_id)
+
+    target = next((p for p in catalog if p["product_id"] == product_id), None)
+    if not target:
+        return None
+
+    target_tags = set(target.get("tags", []))
+    target_category = target.get("category")
+    target_price = float(target.get("price_inr", 0))
+
+    pool = [p for p in catalog if p["product_id"] not in exclude]
+
+    def overlap_of(p):
+        return len(target_tags & set(p.get("tags", [])))
+
+    candidates = [p for p in pool if overlap_of(p) > 0]
+    if not candidates:
+        candidates = [p for p in pool if p.get("category") == target_category]
+    if not candidates:
+        return None
+
+    def score(p):
+        same_cat = 0 if p.get("category") == target_category else 1
+        price_diff = abs(float(p.get("price_inr", 0)) - target_price)
+        return (-overlap_of(p), same_cat, price_diff)
+
+    candidates.sort(key=score)
+    return candidates[0]
+
+
 # ---------------------------------------------------------------------------
 # Prompt builders
 # ---------------------------------------------------------------------------
@@ -189,6 +266,37 @@ LEARNED-HISTORY RULES (READ CAREFULLY — relevance is an ABSOLUTE gate):
 """
 
 
+def build_disliked_block(user_profile):
+    """Feature: Confidence Feedback Loop — turn removals into an avoid-list."""
+    disliked = (user_profile or {}).get("disliked_items") or {}
+    if not disliked:
+        return ""
+
+    top = sorted(
+        disliked.items(), key=lambda kv: int(kv[1].get("count", 0)), reverse=True
+    )[:8]
+    lines = []
+    for pid, info in top:
+        ctx = info.get("last_context")
+        ctx_str = f" (last removed during: {ctx})" if ctx else ""
+        lines.append(
+            f"  - {info.get('name', pid)} — removed {int(info.get('count', 0))} "
+            f"time(s){ctx_str}"
+        )
+
+    return f"""
+
+NEGATIVE SIGNALS (items this user has REMOVED from past carts):
+{chr(10).join(lines)}
+
+AVOID-LIST RULES:
+- Treat the items above as disliked. Do NOT include them unless the user's
+  CURRENT message explicitly asks for them by name.
+- If a removed item would normally fit the situation, pick a different
+  relevant item from the catalog instead — never leave the cart worse.
+"""
+
+
 def build_personalization_block(user_profile):
     if not user_profile:
         return ""
@@ -224,8 +332,9 @@ PERSONALIZATION RULES:
 - Do NOT mention preferences for items with no preference match."""
 
     learned_block = build_learned_history_block(user_profile)
+    disliked_block = build_disliked_block(user_profile)
 
-    return "\n".join(parts) + brand_rules + learned_block
+    return "\n".join(parts) + brand_rules + learned_block + disliked_block
 
 
 def build_refinement_block(previous_cart):
@@ -593,6 +702,36 @@ def lambda_handler(event, context):
                 "order_count": int(profile["order_count"]),
                 "learned_items": _json_safe(profile.get("item_names", {})),
                 "item_counts": _json_safe(profile.get("item_counts", {})),
+            })
+
+        # ----- Record an item removal (Confidence Feedback Loop) -----
+        if action == "record_removal":
+            if not user_id:
+                return _response(400, {"error": "user_id is required to record a removal"})
+            items = body.get("items") or []
+            if not items:
+                return _response(400, {"error": "items list is required"})
+            profile = record_removal(user_id, items, body.get("context"))
+            return _response(200, {
+                "status": "removal_recorded",
+                "user_id": user_id,
+                "disliked_items": _json_safe(profile.get("disliked_items", {})),
+            })
+
+        # ----- Suggest a substitute for an out-of-stock item (Smart Substitution) -----
+        if action == "substitute":
+            product_id = body.get("product_id")
+            if not product_id:
+                return _response(400, {"error": "product_id is required"})
+            catalog = get_full_catalog()
+            substitute = find_substitute(
+                product_id, catalog, exclude_ids=body.get("exclude_ids")
+            )
+            if not substitute:
+                return _response(200, {"substitute": None, "product_id": product_id})
+            return _response(200, {
+                "product_id": product_id,
+                "substitute": _json_safe(substitute),
             })
 
         # ----- Fetch a profile (so the UI can show what's remembered) -----

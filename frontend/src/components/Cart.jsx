@@ -7,7 +7,7 @@ function ConfidenceDot({ score }) {
   );
 }
 
-function CartItem({ item }) {
+function CartItem({ item, onRemove }) {
   return (
     <li className="cart-item">
       <div className="cart-item-thumb">
@@ -18,6 +18,19 @@ function CartItem({ item }) {
           <span className="cart-item-name">{item.name}</span>
           {item.personalized && (
             <span className="badge-personal" title="Personalized for you">✨ for you</span>
+          )}
+          {item.substituted && (
+            <span className="badge-subst" title="Substituted (was out of stock)">🔁 swapped</span>
+          )}
+          {onRemove && (
+            <button
+              className="cart-item-remove"
+              title="Remove this item"
+              aria-label={`Remove ${item.name}`}
+              onClick={() => onRemove(item)}
+            >
+              ×
+            </button>
           )}
         </div>
         <p className="cart-item-reason">{item.reason}</p>
@@ -31,13 +44,32 @@ function CartItem({ item }) {
   );
 }
 
-export default function Cart({ cart, variant, onOrder, compact }) {
+function buildShareText(cart, total, eta) {
+  const lines = [
+    `🛒 *${cart.cart_title || "My Turant Cart"}*`,
+    cart.situation_understood ? `_${cart.situation_understood}_` : "",
+    "",
+    ...(cart.items || []).map((i) => `• ${i.name} — ₹${i.price_inr}`),
+    "",
+    `Total: ₹${total} · delivery in ~${eta} min`,
+    "",
+    "Built in seconds with Turant ⚡ (Confident Mode for Amazon Now)",
+  ];
+  return lines.filter((l) => l !== undefined).join("\n");
+}
+
+export default function Cart({ cart, variant, onOrder, onRemove, compact }) {
   if (!cart || !cart.items) return null;
 
   const total =
     cart.total_inr ||
     cart.items.reduce((s, i) => s + (i.price_inr || 0), 0);
   const eta = Math.max(...cart.items.map((i) => i.eta_min || 12), 12);
+
+  function shareOnWhatsApp() {
+    const text = encodeURIComponent(buildShareText(cart, total, eta));
+    window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
+  }
 
   return (
     <article className={`cart cart-${variant} ${compact ? "compact" : ""}`}>
@@ -67,7 +99,11 @@ export default function Cart({ cart, variant, onOrder, compact }) {
 
       <ul className="cart-list">
         {cart.items.map((it, i) => (
-          <CartItem key={(it.product_id || "p") + i} item={it} />
+          <CartItem
+            key={(it.product_id || "p") + i}
+            item={it}
+            onRemove={onRemove}
+          />
         ))}
       </ul>
 
@@ -84,11 +120,16 @@ export default function Cart({ cart, variant, onOrder, compact }) {
           <span className="cart-total-value">₹{total}</span>
           <span className="cart-total-eta">· delivery in ~{eta} min</span>
         </div>
-        {onOrder && (
-          <button className="order-btn" onClick={onOrder}>
-            Order now
+        <div className="cart-actions">
+          <button className="share-btn" onClick={shareOnWhatsApp} title="Share on WhatsApp">
+            <span className="share-btn-icon">🟢</span> Share
           </button>
-        )}
+          {onOrder && (
+            <button className="order-btn" onClick={onOrder}>
+              Order now
+            </button>
+          )}
+        </div>
       </footer>
     </article>
   );
