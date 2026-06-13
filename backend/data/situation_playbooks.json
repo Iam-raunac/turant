@@ -1,0 +1,91 @@
+{
+  "power_cut": {
+    "title_en": "Power Cut Kit",
+    "title_hi": "Power Cut Kit",
+    "emoji": "🔌",
+    "description": "Monsoon power outage — light, charging, and food essentials",
+    "core_items": ["P001", "P002", "P003", "P004", "P005"],
+    "conditional_items": {
+      "has_elderly": ["P020"],
+      "has_baby": ["P021"]
+    },
+    "safety_note": null,
+    "reasoning_hints": {
+      "P001": "Tonight's light, no electricity needed",
+      "P002": "Lasts 6 hrs on a single charge",
+      "P003": "Keeps your phone and devices powered",
+      "P004": "Quick dinner that needs no fridge or stove",
+      "P005": "Stay refreshed while the fridge is off"
+    }
+  },
+  "guests_coming": {
+    "title_en": "Mehmaan Cart",
+    "title_hi": "Mehmaan Cart",
+    "emoji": "🏠",
+    "description": "Unannounced guests arriving soon — snacks, drinks, and a quick meal",
+    "core_items": ["P010", "P011", "P012", "P013", "P014", "P015"],
+    "conditional_items": {
+      "guest_count_high": ["P016"]
+    },
+    "safety_note": null,
+    "reasoning_hints": {
+      "P010": "Quick main course, ready in minutes",
+      "P011": "Pairs perfectly with the main course",
+      "P012": "Refreshing drinks for guests",
+      "P013": "Instant savory snack while you cook",
+      "P014": "A sweet ending to the meal",
+      "P015": "Keeps drinks cold without waiting"
+    }
+  },
+  "pooja_prep": {
+    "title_en": "Pooja Saamagri",
+    "title_hi": "Pooja Saamagri",
+    "emoji": "🪔",
+    "description": "Last-minute pooja supplies for tomorrow's ceremony",
+    "core_items": ["P030", "P031", "P032", "P033", "P034", "P035", "P036"],
+    "conditional_items": {},
+    "safety_note": null,
+    "reasoning_hints": {
+      "P030": "Essential for the evening aarti",
+      "P031": "Used for the holy flame",
+      "P032": "Fragrance for the puja space",
+      "P033": "Sacred thread for the ritual",
+      "P034": "Offered to the deity",
+      "P035": "For decoration and offering",
+      "P036": "Used for purification"
+    }
+  },
+  "exam_night": {
+    "title_en": "Exam Night Kit",
+    "title_hi": "Exam Night Kit",
+    "emoji": "📚",
+    "description": "Late-night study fuel and stationery essentials",
+    "core_items": ["P040", "P041", "P042", "P043", "P044"],
+    "conditional_items": {},
+    "safety_note": null,
+    "reasoning_hints": {
+      "P040": "Keeps you awake during late hours",
+      "P041": "Quick energy without leaving your desk",
+      "P042": "For last-minute notes and corrections",
+      "P043": "Sharp focus, no breaks needed",
+      "P044": "Light snack to keep hunger away"
+    }
+  },
+  "quick_health": {
+    "title_en": "Quick Health — Cold & Cough",
+    "title_hi": "Cold & Cough Kit",
+    "emoji": "🤒",
+    "description": "OTC relief for early cold and cough symptoms",
+    "core_items": ["P050", "P051", "P052", "P053", "P054", "P055"],
+    "conditional_items": {},
+    "safety_note": "This is not medical advice. Consult a doctor if symptoms persist beyond 48 hours or worsen.",
+    "reasoning_hints": {
+      "P050": "Soothes chest congestion",
+      "P051": "Relieves sore throat",
+      "P052": "Natural remedy for throat irritation",
+      "P053": "Warm relief for cold symptoms",
+      "P054": "Helps reduce mild fever and body ache (OTC)",
+      "P055": "Stay hydrated and comfortable"
+    }
+  }
+}

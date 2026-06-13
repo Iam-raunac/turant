@@ -1,0 +1,45 @@
+[
+  {"product_id": "P001", "name": "Candles (pack of 10)", "category": "power_cut", "price_inr": 40, "image_url": "https://placehold.co/200x200?text=Candles", "tags": ["light", "emergency"]},
+  {"product_id": "P002", "name": "Rechargeable LED Bulb", "category": "power_cut", "price_inr": 299, "image_url": "https://placehold.co/200x200?text=LED+Bulb", "tags": ["light", "emergency", "rechargeable"]},
+  {"product_id": "P003", "name": "Power Bank 10000mAh", "category": "power_cut", "price_inr": 699, "image_url": "https://placehold.co/200x200?text=Power+Bank", "tags": ["charging", "emergency"]},
+  {"product_id": "P004", "name": "Maggi Atta Noodles (pack of 4)", "category": "power_cut", "price_inr": 140, "image_url": "https://placehold.co/200x200?text=Maggi", "tags": ["food", "instant", "no-fridge"]},
+  {"product_id": "P005", "name": "Cold Drinks Pack (6 cans)", "category": "power_cut", "price_inr": 240, "image_url": "https://placehold.co/200x200?text=Cold+Drinks", "tags": ["beverage", "no-fridge"]},
+
+  {"product_id": "P010", "name": "Paneer 200g", "category": "guests", "price_inr": 89, "image_url": "https://placehold.co/200x200?text=Paneer", "tags": ["food", "main-course"]},
+  {"product_id": "P011", "name": "Ready-to-eat Naan (4 pc)", "category": "guests", "price_inr": 95, "image_url": "https://placehold.co/200x200?text=Naan", "tags": ["food", "main-course"]},
+  {"product_id": "P012", "name": "Coca-Cola 1.25L", "category": "guests", "price_inr": 65, "image_url": "https://placehold.co/200x200?text=Coca-Cola", "tags": ["beverage"]},
+  {"product_id": "P013", "name": "Haldiram Namkeen Mix 200g", "category": "guests", "price_inr": 85, "image_url": "https://placehold.co/200x200?text=Namkeen", "tags": ["snack"]},
+  {"product_id": "P014", "name": "Gulab Jamun Tin (8 pc)", "category": "guests", "price_inr": 140, "image_url": "https://placehold.co/200x200?text=Gulab+Jamun", "tags": ["dessert"]},
+  {"product_id": "P015", "name": "Ice Cubes 1kg", "category": "guests", "price_inr": 50, "image_url": "https://placehold.co/200x200?text=Ice", "tags": ["beverage", "cooling"]},
+  {"product_id": "P016", "name": "Extra Naan (4 pc)", "category": "guests", "price_inr": 95, "image_url": "https://placehold.co/200x200?text=Naan", "tags": ["food", "extra"]},
+
+  {"product_id": "P020", "name": "Digital BP Monitor Charger", "category": "power_cut", "price_inr": 199, "image_url": "https://placehold.co/200x200?text=BP+Charger", "tags": ["health", "elderly"]},
+  {"product_id": "P021", "name": "Baby Night Light (battery)", "category": "power_cut", "price_inr": 249, "image_url": "https://placehold.co/200x200?text=Night+Light", "tags": ["baby", "light"]},
+
+  {"product_id": "P030", "name": "Diyas (pack of 12)", "category": "pooja", "price_inr": 60, "image_url": "https://placehold.co/200x200?text=Diyas", "tags": ["pooja"]},
+  {"product_id": "P031", "name": "Camphor 50g", "category": "pooja", "price_inr": 45, "image_url": "https://placehold.co/200x200?text=Camphor", "tags": ["pooja"]},
+  {"product_id": "P032", "name": "Agarbatti Pack", "category": "pooja", "price_inr": 80, "image_url": "https://placehold.co/200x200?text=Agarbatti", "tags": ["pooja"]},
+  {"product_id": "P033", "name": "Kalawa Red Thread", "category": "pooja", "price_inr": 25, "image_url": "https://placehold.co/200x200?text=Kalawa", "tags": ["pooja"]},
+  {"product_id": "P034", "name": "Coconut (2 pc)", "category": "pooja", "price_inr": 70, "image_url": "https://placehold.co/200x200?text=Coconut", "tags": ["pooja"]},
+  {"product_id": "P035", "name": "Marigold Flowers", "category": "pooja", "price_inr": 50, "image_url": "https://placehold.co/200x200?text=Marigold", "tags": ["pooja"]},
+  {"product_id": "P036", "name": "Gangajal Bottle", "category": "pooja", "price_inr": 30, "image_url": "https://placehold.co/200x200?text=Gangajal", "tags": ["pooja"]},
+
+  {"product_id": "P040", "name": "Instant Coffee Sachets (10)", "category": "exam", "price_inr": 99, "image_url": "https://placehold.co/200x200?text=Coffee", "tags": ["beverage", "energy"]},
+  {"product_id": "P041", "name": "Energy Bar (pack of 3)", "category": "exam", "price_inr": 120, "image_url": "https://placehold.co/200x200?text=Energy+Bar", "tags": ["snack", "energy"]},
+  {"product_id": "P042", "name": "Sticky Notes Pad", "category": "exam", "price_inr": 45, "image_url": "https://placehold.co/200x200?text=Sticky+Notes", "tags": ["stationery"]},
+  {"product_id": "P043", "name": "Highlighter Set (5 colors)", "category": "exam", "price_inr": 89, "image_url": "https://placehold.co/200x200?text=Highlighters", "tags": ["stationery"]},
+  {"product_id": "P044", "name": "Salted Crackers Pack", "category": "exam", "price_inr": 35, "image_url": "https://placehold.co/200x200?text=Crackers", "tags": ["snack"]},
+
+  {"product_id": "P050", "name": "Vicks Vaporub 25g", "category": "health", "price_inr": 95, "image_url": "https://placehold.co/200x200?text=Vicks", "tags": ["otc", "cold"]},
+  {"product_id": "P051", "name": "Strepsils Lozenges (16)", "category": "health", "price_inr": 85, "image_url": "https://placehold.co/200x200?text=Strepsils", "tags": ["otc", "throat"]},
+  {"product_id": "P052", "name": "Honey 250g", "category": "health", "price_inr": 180, "image_url": "https://placehold.co/200x200?text=Honey", "tags": ["natural", "throat"]},
+  {"product_id": "P053", "name": "Ginger Tea Sachets (10)", "category": "health", "price_inr": 75, "image_url": "https://placehold.co/200x200?text=Ginger+Tea", "tags": ["beverage", "cold"]},
+  {"product_id": "P054", "name": "Crocin Tablets (OTC, 10)", "category": "health", "price_inr": 35, "image_url": "https://placehold.co/200x200?text=Crocin", "tags": ["otc", "fever"]},
+  {"product_id": "P055", "name": "Tissue Box", "category": "health", "price_inr": 60, "image_url": "https://placehold.co/200x200?text=Tissues", "tags": ["essentials"]},
+
+  {"product_id": "P060", "name": "Atta 5kg", "category": "staples", "price_inr": 250, "image_url": "https://placehold.co/200x200?text=Atta", "tags": ["staple", "reorder"]},
+  {"product_id": "P061", "name": "Sugar 1kg", "category": "staples", "price_inr": 48, "image_url": "https://placehold.co/200x200?text=Sugar", "tags": ["staple", "reorder"]},
+  {"product_id": "P062", "name": "Tea Powder 250g", "category": "staples", "price_inr": 110, "image_url": "https://placehold.co/200x200?text=Tea", "tags": ["staple", "reorder"]},
+  {"product_id": "P063", "name": "Britannia Biscuits (pack of 4)", "category": "staples", "price_inr": 80, "image_url": "https://placehold.co/200x200?text=Biscuits", "tags": ["snack", "reorder"]},
+  {"product_id": "P064", "name": "Milk 1L", "category": "staples", "price_inr": 64, "image_url": "https://placehold.co/200x200?text=Milk", "tags": ["staple", "reorder"]}
+]
