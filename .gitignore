@@ -1,0 +1,28 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Backend virtual envs
+backend/scripts/.venv/
+
+# Node
+node_modules/
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.kiro/
+
+# Logs
+*.log

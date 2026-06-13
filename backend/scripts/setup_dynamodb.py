@@ -1,11 +1,17 @@
 """
-One-time setup script: creates the 3 DynamoDB tables needed for Ghar Ka Sense.
+One-time setup script: creates the DynamoDB tables needed for Turant.
 
 Run this locally (after `aws configure`):
     python3 setup_dynamodb.py
 
 Uses on-demand (PAY_PER_REQUEST) billing — stays within AWS Free Tier for
 hackathon-scale usage and avoids provisioning capacity manually.
+
+Tables created:
+- Catalog              — product master data
+- SituationPlaybooks   — (legacy v1, kept for reference)
+- CartSessions         — for refinement history (optional)
+- UserPreferences      — per-user brand preferences for personalization
 """
 
 import boto3
@@ -42,21 +48,28 @@ def main():
         attribute_definitions=[{"AttributeName": "product_id", "AttributeType": "S"}],
     )
 
-    # 2. SituationPlaybooks table
+    # 2. SituationPlaybooks table (legacy)
     create_table_if_not_exists(
         table_name="SituationPlaybooks",
         key_schema=[{"AttributeName": "situation_id", "KeyType": "HASH"}],
         attribute_definitions=[{"AttributeName": "situation_id", "AttributeType": "S"}],
     )
 
-    # 3. CartSessions table (for future use / order history within session)
+    # 3. CartSessions table
     create_table_if_not_exists(
         table_name="CartSessions",
         key_schema=[{"AttributeName": "session_id", "KeyType": "HASH"}],
         attribute_definitions=[{"AttributeName": "session_id", "AttributeType": "S"}],
     )
 
-    print("\nAll tables ready. Next: run seed_data.py to load catalog + playbooks.")
+    # 4. UserPreferences table — for Feature 2b (personalization)
+    create_table_if_not_exists(
+        table_name="UserPreferences",
+        key_schema=[{"AttributeName": "user_id", "KeyType": "HASH"}],
+        attribute_definitions=[{"AttributeName": "user_id", "AttributeType": "S"}],
+    )
+
+    print("\nAll tables ready. Next: run seed_data.py to load catalog + playbooks + preferences.")
 
 
 if __name__ == "__main__":
