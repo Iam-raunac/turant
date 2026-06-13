@@ -51,6 +51,12 @@ CATALOG_TABLE = os.environ.get("CATALOG_TABLE", "Catalog")
 USER_PREFS_TABLE = os.environ.get("USER_PREFS_TABLE", "UserPreferences")
 MODEL_ID = "amazon.nova-lite-v1:0"
 
+STANDARD_SAFETY_NOTE = (
+    "This is not medical advice. Consult a doctor if symptoms persist beyond "
+    "48 hours or worsen. We only suggest OTC products available without a "
+    "prescription."
+)
+
 
 # ---------------------------------------------------------------------------
 # Data helpers
@@ -351,6 +357,79 @@ def parse_model_output(raw_text):
     return json.loads(cleaned)
 
 
+def apply_personalization_flags(result, user_profile):
+    """
+    Deterministic safety net: guarantees personalization_applied and
+    personalized flags are correct, even if Nova Lite skips them.
+    Matches item names against the user's favorite_brands.
+    """
+    favorite_brands = []
+    if user_profile:
+        favorite_brands = [
+            b for b in user_profile.get("favorite_brands", {}).values() if b
+        ]
+
+    def process_cart(cart):
+        any_personalized = False
+        for item in cart.get("items", []):
+            name = item.get("name", "").lower()
+            matched_brand = None
+            for brand in favorite_brands:
+                if brand.lower() in name:
+                    matched_brand = brand
+                    break
+            if matched_brand:
+                item["personalized"] = True
+                any_personalized = True
+                reason = item.get("reason", "")
+                if matched_brand.lower() not in reason.lower():
+                    item["reason"] = f"{reason} {matched_brand} — your usual choice."
+            else:
+                item.setdefault("personalized", False)
+        cart["personalization_applied"] = any_personalized
+        return cart
+
+    if "items" in result:
+        process_cart(result)
+    elif "carts" in result:
+        for cart in result["carts"]:
+            process_cart(cart)
+
+    return result
+
+
+def fix_delivery_note(cart):
+    """
+    Deterministic fix: only set delivery_note if some item has
+    eta_min STRICTLY > 20. Overrides model's cosmetic mistakes.
+    """
+    items = cart.get("items", [])
+    slow_items = [i for i in items if i.get("eta_min", 0) > 20]
+    if not slow_items:
+        cart["delivery_note"] = None
+    else:
+        slow = slow_items[0]
+        cart["delivery_note"] = (
+            f"Most items arrive in ~12 mins, but {slow.get('name')} takes "
+            f"about {slow.get('eta_min')} mins — remove it if you need "
+            f"everything faster."
+        )
+    return cart
+
+
+def fix_safety_note(cart):
+    """
+    Deterministic fix: safety_note must EITHER be the exact standard
+    medical disclaimer OR null. Nova Lite sometimes invents its own
+    (non-medical) safety notes — e.g. "keep candles away from children".
+    Those are not part of the spec, so we strip them.
+    """
+    note = cart.get("safety_note")
+    if note is not None and note != STANDARD_SAFETY_NOTE:
+        cart["safety_note"] = None
+    return cart
+
+
 # ---------------------------------------------------------------------------
 # Lambda handler
 # ---------------------------------------------------------------------------
@@ -388,6 +467,16 @@ def lambda_handler(event, context):
             raw_output = call_bedrock(prompt, max_tokens=1800)
 
         result = parse_model_output(raw_output)
+        result = apply_personalization_flags(result, user_profile)
+
+        if "items" in result:
+            result = fix_delivery_note(result)
+            result = fix_safety_note(result)
+        elif "carts" in result:
+            for cart in result["carts"]:
+                fix_delivery_note(cart)
+                fix_safety_note(cart)
+
         return _response(200, result)
 
     except json.JSONDecodeError as e:
