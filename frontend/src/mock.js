@@ -35,18 +35,18 @@ const DEMO_SEED = {
   demo_user_1: {
     name: "Mrs. Iyer",
     orders: [
-      { product_id: "P064", name: "Milk 1L", count: 6, days_ago: 6 },
-      { product_id: "P001", name: "Candles (pack of 10)", count: 2, days_ago: 22 },
-      { product_id: "P063", name: "Britannia Biscuits (pack of 4)", count: 3, days_ago: 15 },
-      { product_id: "P054", name: "Crocin Tablets (OTC, 10)", count: 2, days_ago: 34 },
+      { product_id: "P064", name: "Amul Taaza Toned Milk 1L", count: 6, days_ago: 6 },
+      { product_id: "P001", name: "Eveready Candles (pack of 10)", count: 2, days_ago: 22 },
+      { product_id: "P063", name: "Britannia Marie Gold Biscuits (pack of 6)", count: 3, days_ago: 15 },
+      { product_id: "P054", name: "Crocin Advance Tablets (OTC, strip of 15)", count: 2, days_ago: 34 },
     ],
   },
   demo_user_2: {
     name: "Aarav",
     orders: [
-      { product_id: "P004", name: "Maggi Atta Noodles (pack of 4)", count: 5, days_ago: 14 },
-      { product_id: "P040", name: "Instant Coffee Sachets (10)", count: 4, days_ago: 16 },
-      { product_id: "P041", name: "Energy Bar (pack of 3)", count: 3, days_ago: 8 },
+      { product_id: "P004", name: "Maggi 2-Minute Masala Noodles (pack of 4)", count: 5, days_ago: 14 },
+      { product_id: "P040", name: "Nescafé Classic Coffee Sachets (pack of 12)", count: 4, days_ago: 16 },
+      { product_id: "P041", name: "Yoga Bar Multigrain Energy Bars (pack of 6)", count: 3, days_ago: 8 },
     ],
   },
 };
@@ -136,13 +136,13 @@ const POWER_CUT = {
     "Power outage during monsoon — light, charging, and easy food.",
   clarifying_question: null,
   items: [
-    { product_id: "P001", name: "Candles (pack of 10)", reason: "Tonight's light, no electricity needed", confidence: 0.92, price_inr: 40, eta_min: 12, personalized: false },
-    { product_id: "P002", name: "Rechargeable LED Bulb", reason: "Lasts 6 hrs on a single charge", confidence: 0.9, price_inr: 299, eta_min: 12, personalized: false },
-    { product_id: "P003", name: "Power Bank 10000mAh", reason: "Keeps your phone powered", confidence: 0.88, price_inr: 699, eta_min: 14, personalized: false },
-    { product_id: "P004", name: "Maggi Atta Noodles (pack of 4)", reason: "Quick dinner, no fridge or stove", confidence: 0.82, price_inr: 140, eta_min: 12, personalized: false },
-    { product_id: "P005", name: "Cold Drinks Pack (6 cans)", reason: "Refreshing while the fridge is off", confidence: 0.78, price_inr: 240, eta_min: 12, personalized: false },
+    { product_id: "P001", name: "Eveready Candles (pack of 10)", reason: "Tonight's light, no electricity needed", confidence: 0.92, price_inr: 45, eta_min: 10, personalized: false },
+    { product_id: "P002", name: "Wipro Emergency Rechargeable LED Bulb", reason: "Lasts 6 hrs on a single charge", confidence: 0.9, price_inr: 399, eta_min: 12, personalized: false },
+    { product_id: "P003", name: "Mi Power Bank 10000mAh", reason: "Keeps your phone powered", confidence: 0.88, price_inr: 899, eta_min: 14, personalized: false },
+    { product_id: "P004", name: "Maggi 2-Minute Masala Noodles (pack of 4)", reason: "Quick dinner, no fridge or stove", confidence: 0.82, price_inr: 56, eta_min: 10, personalized: false },
+    { product_id: "P005", name: "Thums Up Cans (pack of 6, 300ml)", reason: "Refreshing while the fridge is off", confidence: 0.78, price_inr: 240, eta_min: 12, personalized: false },
   ],
-  safety_note: null, delivery_note: null, personalization_applied: false, total_inr: 1418,
+  safety_note: null, delivery_note: null, personalization_applied: false, total_inr: 1639,
 };
 
 const HEALTH = {
@@ -151,13 +151,13 @@ const HEALTH = {
   situation_understood: "Early cold-and-cough symptoms — OTC relief items.",
   clarifying_question: null,
   items: [
-    { product_id: "P054", name: "Crocin Tablets (OTC, 10)", reason: "Helps reduce mild fever and body ache (OTC)", confidence: 0.9, price_inr: 35, eta_min: 10, personalized: false },
-    { product_id: "P051", name: "Strepsils Lozenges (16)", reason: "Relieves sore throat", confidence: 0.88, price_inr: 85, eta_min: 10, personalized: false },
-    { product_id: "P050", name: "Vicks Vaporub 25g", reason: "Soothes chest congestion", confidence: 0.86, price_inr: 95, eta_min: 10, personalized: false },
-    { product_id: "P053", name: "Ginger Tea Sachets (10)", reason: "Warm relief for cold symptoms", confidence: 0.78, price_inr: 75, eta_min: 10, personalized: false },
-    { product_id: "P055", name: "Tissue Box", reason: "Stay comfortable", confidence: 0.7, price_inr: 60, eta_min: 10, personalized: false },
+    { product_id: "P054", name: "Crocin Advance Tablets (OTC, strip of 15)", reason: "Helps reduce mild fever and body ache (OTC)", confidence: 0.9, price_inr: 35, eta_min: 10, personalized: false },
+    { product_id: "P051", name: "Strepsils Original Lozenges (pack of 16)", reason: "Relieves sore throat", confidence: 0.88, price_inr: 95, eta_min: 10, personalized: false },
+    { product_id: "P050", name: "Vicks VapoRub 50g", reason: "Soothes chest congestion", confidence: 0.86, price_inr: 160, eta_min: 10, personalized: false },
+    { product_id: "P053", name: "Organic India Tulsi Ginger Tea (25 bags)", reason: "Warm relief for cold symptoms", confidence: 0.78, price_inr: 190, eta_min: 10, personalized: false },
+    { product_id: "P055", name: "Origami Soft Tissue Box (100 pulls)", reason: "Stay comfortable", confidence: 0.7, price_inr: 65, eta_min: 10, personalized: false },
   ],
-  safety_note: SAFETY_NOTE, delivery_note: null, personalization_applied: false, total_inr: 350,
+  safety_note: SAFETY_NOTE, delivery_note: null, personalization_applied: false, total_inr: 545,
 };
 
 const DINNER = {
@@ -166,12 +166,12 @@ const DINNER = {
   situation_understood: "Dinner to put together quickly for guests.",
   clarifying_question: null,
   items: [
-    { product_id: "P072", name: "Butter Paneer (serves 2)", reason: "Crowd-pleasing main course", confidence: 0.85, price_inr: 190, eta_min: 18, personalized: false },
-    { product_id: "P073", name: "Tandoori Roti (6 pc)", reason: "Pairs with the curry", confidence: 0.82, price_inr: 60, eta_min: 18, personalized: false },
-    { product_id: "P013", name: "Haldiram Namkeen Mix 200g", reason: "Quick starter", confidence: 0.78, price_inr: 85, eta_min: 15, personalized: false },
-    { product_id: "P014", name: "Gulab Jamun Tin (8 pc)", reason: "Dessert to finish", confidence: 0.75, price_inr: 140, eta_min: 15, personalized: false },
+    { product_id: "P072", name: "Butter Paneer Masala (serves 2)", reason: "Crowd-pleasing main course", confidence: 0.85, price_inr: 230, eta_min: 20, personalized: false },
+    { product_id: "P073", name: "Tandoori Roti (6 pc)", reason: "Pairs with the curry", confidence: 0.82, price_inr: 70, eta_min: 18, personalized: false },
+    { product_id: "P013", name: "Haldiram's Classic Namkeen Mix 200g", reason: "Quick starter", confidence: 0.78, price_inr: 55, eta_min: 12, personalized: false },
+    { product_id: "P014", name: "Haldiram's Gulab Jamun 1kg", reason: "Dessert to finish", confidence: 0.75, price_inr: 199, eta_min: 15, personalized: false },
   ],
-  safety_note: null, delivery_note: null, personalization_applied: false, total_inr: 475,
+  safety_note: null, delivery_note: null, personalization_applied: false, total_inr: 554,
 };
 
 const POOJA = {
@@ -180,11 +180,11 @@ const POOJA = {
   situation_understood: "A small pooja at home — the common essentials.",
   clarifying_question: null,
   items: [
-    { product_id: "P030", name: "Diyas (pack of 12)", reason: "For the evening aarti", confidence: 0.82, price_inr: 60, eta_min: 18, personalized: false },
-    { product_id: "P032", name: "Agarbatti Pack", reason: "Fragrance for the space", confidence: 0.78, price_inr: 80, eta_min: 18, personalized: false },
-    { product_id: "P035", name: "Marigold Flowers", reason: "Decoration and offering", confidence: 0.72, price_inr: 50, eta_min: 18, personalized: false },
+    { product_id: "P030", name: "Eco Clay Diyas (pack of 12)", reason: "For the evening aarti", confidence: 0.82, price_inr: 60, eta_min: 18, personalized: false },
+    { product_id: "P032", name: "Cycle Three-in-One Agarbatti Pack", reason: "Fragrance for the space", confidence: 0.78, price_inr: 70, eta_min: 18, personalized: false },
+    { product_id: "P035", name: "Fresh Marigold Garland (Genda Phool)", reason: "Decoration and offering", confidence: 0.72, price_inr: 50, eta_min: 18, personalized: false },
   ],
-  safety_note: null, delivery_note: null, personalization_applied: false, total_inr: 190,
+  safety_note: null, delivery_note: null, personalization_applied: false, total_inr: 180,
 };
 
 const CLARIFY = {

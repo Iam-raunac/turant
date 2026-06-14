@@ -49,6 +49,11 @@ export default function App() {
   const [error, setError] = useState(null);
   const [ordered, setOrdered] = useState(null);
   const [feedbackNote, setFeedbackNote] = useState(null);
+  // Bumped only when a genuinely NEW cart is generated (generate / refine /
+  // reorder) — never on in-cart edits (substitute / drop / remove). Used as the
+  // remount key for SmartSubstitution so its frozen out-of-stock proposal
+  // resets per cart, not per edit.
+  const [cartGen, setCartGen] = useState(0);
 
   const refreshProfile = useCallback(async (uid) => {
     if (!uid) {
@@ -106,6 +111,7 @@ export default function App() {
 
     try {
       setResult(await generateCart(payload));
+      setCartGen((g) => g + 1);
     } catch (err) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -121,6 +127,7 @@ export default function App() {
     if (user.id) payload.user_id = user.id;
     try {
       setResult(await generateCart(payload));
+      setCartGen((g) => g + 1);
     } catch (err) {
       setError(err.message || "Refinement failed");
     } finally {
@@ -157,6 +164,7 @@ export default function App() {
       total_inr: items.reduce((s, i) => s + (i.price_inr || 0), 0),
       _source: result?._source,
     });
+    setCartGen((g) => g + 1);
   }
 
   async function placeOrder(cart) {
@@ -300,6 +308,7 @@ export default function App() {
             {result.response_type === "confident" && (
               <>
                 <SmartSubstitution
+                  key={cartGen}
                   cart={result}
                   onApply={applySubstitute}
                   onDrop={dropItem}

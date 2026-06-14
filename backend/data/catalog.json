@@ -1,625 +1,74 @@
 [
-  {
-    "product_id": "P001",
-    "name": "Candles (pack of 10)",
-    "category": "power_cut",
-    "price_inr": 40,
-    "image_url": "https://placehold.co/200x200?text=Candles",
-    "tags": [
-      "light",
-      "emergency"
-    ],
-    "eta_min": 12
-  },
-  {
-    "product_id": "P002",
-    "name": "Rechargeable LED Bulb",
-    "category": "power_cut",
-    "price_inr": 299,
-    "image_url": "https://placehold.co/200x200?text=LED+Bulb",
-    "tags": [
-      "light",
-      "emergency",
-      "rechargeable"
-    ],
-    "eta_min": 12
-  },
-  {
-    "product_id": "P003",
-    "name": "Power Bank 10000mAh",
-    "category": "power_cut",
-    "price_inr": 699,
-    "image_url": "https://placehold.co/200x200?text=Power+Bank",
-    "tags": [
-      "charging",
-      "emergency"
-    ],
-    "eta_min": 14
-  },
-  {
-    "product_id": "P004",
-    "name": "Maggi Atta Noodles (pack of 4)",
-    "category": "power_cut",
-    "price_inr": 140,
-    "image_url": "https://placehold.co/200x200?text=Maggi",
-    "tags": [
-      "food",
-      "instant",
-      "no-fridge"
-    ],
-    "eta_min": 12
-  },
-  {
-    "product_id": "P005",
-    "name": "Cold Drinks Pack (6 cans)",
-    "category": "power_cut",
-    "price_inr": 240,
-    "image_url": "https://placehold.co/200x200?text=Cold+Drinks",
-    "tags": [
-      "beverage",
-      "no-fridge"
-    ],
-    "eta_min": 12
-  },
-  {
-    "product_id": "P010",
-    "name": "Paneer 200g",
-    "category": "guests",
-    "price_inr": 89,
-    "image_url": "https://placehold.co/200x200?text=Paneer",
-    "tags": [
-      "food",
-      "main-course"
-    ],
-    "eta_min": 15
-  },
-  {
-    "product_id": "P011",
-    "name": "Ready-to-eat Naan (4 pc)",
-    "category": "guests",
-    "price_inr": 95,
-    "image_url": "https://placehold.co/200x200?text=Naan",
-    "tags": [
-      "food",
-      "main-course"
-    ],
-    "eta_min": 15
-  },
-  {
-    "product_id": "P012",
-    "name": "Coca-Cola 1.25L",
-    "category": "guests",
-    "price_inr": 65,
-    "image_url": "https://placehold.co/200x200?text=Coca-Cola",
-    "tags": [
-      "beverage"
-    ],
-    "eta_min": 15
-  },
-  {
-    "product_id": "P013",
-    "name": "Haldiram Namkeen Mix 200g",
-    "category": "guests",
-    "price_inr": 85,
-    "image_url": "https://placehold.co/200x200?text=Namkeen",
-    "tags": [
-      "snack"
-    ],
-    "eta_min": 15
-  },
-  {
-    "product_id": "P014",
-    "name": "Gulab Jamun Tin (8 pc)",
-    "category": "guests",
-    "price_inr": 140,
-    "image_url": "https://placehold.co/200x200?text=Gulab+Jamun",
-    "tags": [
-      "dessert"
-    ],
-    "eta_min": 15
-  },
-  {
-    "product_id": "P015",
-    "name": "Ice Cubes 1kg",
-    "category": "guests",
-    "price_inr": 50,
-    "image_url": "https://placehold.co/200x200?text=Ice",
-    "tags": [
-      "beverage",
-      "cooling"
-    ],
-    "eta_min": 15
-  },
-  {
-    "product_id": "P016",
-    "name": "Extra Naan (4 pc)",
-    "category": "guests",
-    "price_inr": 95,
-    "image_url": "https://placehold.co/200x200?text=Naan",
-    "tags": [
-      "food",
-      "extra"
-    ],
-    "eta_min": 15
-  },
-  {
-    "product_id": "P020",
-    "name": "Digital BP Monitor Charger",
-    "category": "power_cut",
-    "price_inr": 199,
-    "image_url": "https://placehold.co/200x200?text=BP+Charger",
-    "tags": [
-      "health",
-      "elderly"
-    ],
-    "eta_min": 18
-  },
-  {
-    "product_id": "P021",
-    "name": "Baby Night Light (battery)",
-    "category": "power_cut",
-    "price_inr": 249,
-    "image_url": "https://placehold.co/200x200?text=Night+Light",
-    "tags": [
-      "baby",
-      "light"
-    ],
-    "eta_min": 12
-  },
-  {
-    "product_id": "P030",
-    "name": "Diyas (pack of 12)",
-    "category": "pooja",
-    "price_inr": 60,
-    "image_url": "https://placehold.co/200x200?text=Diyas",
-    "tags": [
-      "pooja"
-    ],
-    "eta_min": 18
-  },
-  {
-    "product_id": "P031",
-    "name": "Camphor 50g",
-    "category": "pooja",
-    "price_inr": 45,
-    "image_url": "https://placehold.co/200x200?text=Camphor",
-    "tags": [
-      "pooja"
-    ],
-    "eta_min": 18
-  },
-  {
-    "product_id": "P032",
-    "name": "Agarbatti Pack",
-    "category": "pooja",
-    "price_inr": 80,
-    "image_url": "https://placehold.co/200x200?text=Agarbatti",
-    "tags": [
-      "pooja"
-    ],
-    "eta_min": 18
-  },
-  {
-    "product_id": "P033",
-    "name": "Kalawa Red Thread",
-    "category": "pooja",
-    "price_inr": 25,
-    "image_url": "https://placehold.co/200x200?text=Kalawa",
-    "tags": [
-      "pooja"
-    ],
-    "eta_min": 18
-  },
-  {
-    "product_id": "P034",
-    "name": "Coconut (2 pc)",
-    "category": "pooja",
-    "price_inr": 70,
-    "image_url": "https://placehold.co/200x200?text=Coconut",
-    "tags": [
-      "pooja"
-    ],
-    "eta_min": 18
-  },
-  {
-    "product_id": "P035",
-    "name": "Marigold Flowers",
-    "category": "pooja",
-    "price_inr": 50,
-    "image_url": "https://placehold.co/200x200?text=Marigold",
-    "tags": [
-      "pooja"
-    ],
-    "eta_min": 18
-  },
-  {
-    "product_id": "P036",
-    "name": "Gangajal Bottle",
-    "category": "pooja",
-    "price_inr": 30,
-    "image_url": "https://placehold.co/200x200?text=Gangajal",
-    "tags": [
-      "pooja"
-    ],
-    "eta_min": 22
-  },
-  {
-    "product_id": "P040",
-    "name": "Instant Coffee Sachets (10)",
-    "category": "exam",
-    "price_inr": 99,
-    "image_url": "https://placehold.co/200x200?text=Coffee",
-    "tags": [
-      "beverage",
-      "energy"
-    ],
-    "eta_min": 10
-  },
-  {
-    "product_id": "P041",
-    "name": "Energy Bar (pack of 3)",
-    "category": "exam",
-    "price_inr": 120,
-    "image_url": "https://placehold.co/200x200?text=Energy+Bar",
-    "tags": [
-      "snack",
-      "energy"
-    ],
-    "eta_min": 10
-  },
-  {
-    "product_id": "P042",
-    "name": "Sticky Notes Pad",
-    "category": "exam",
-    "price_inr": 45,
-    "image_url": "https://placehold.co/200x200?text=Sticky+Notes",
-    "tags": [
-      "stationery"
-    ],
-    "eta_min": 10
-  },
-  {
-    "product_id": "P043",
-    "name": "Highlighter Set (5 colors)",
-    "category": "exam",
-    "price_inr": 89,
-    "image_url": "https://placehold.co/200x200?text=Highlighters",
-    "tags": [
-      "stationery"
-    ],
-    "eta_min": 10
-  },
-  {
-    "product_id": "P044",
-    "name": "Salted Crackers Pack",
-    "category": "exam",
-    "price_inr": 35,
-    "image_url": "https://placehold.co/200x200?text=Crackers",
-    "tags": [
-      "snack"
-    ],
-    "eta_min": 10
-  },
-  {
-    "product_id": "P050",
-    "name": "Vicks Vaporub 25g",
-    "category": "health",
-    "price_inr": 95,
-    "image_url": "https://placehold.co/200x200?text=Vicks",
-    "tags": [
-      "otc",
-      "cold"
-    ],
-    "eta_min": 10
-  },
-  {
-    "product_id": "P051",
-    "name": "Strepsils Lozenges (16)",
-    "category": "health",
-    "price_inr": 85,
-    "image_url": "https://placehold.co/200x200?text=Strepsils",
-    "tags": [
-      "otc",
-      "throat"
-    ],
-    "eta_min": 10
-  },
-  {
-    "product_id": "P052",
-    "name": "Honey 250g",
-    "category": "health",
-    "price_inr": 180,
-    "image_url": "https://placehold.co/200x200?text=Honey",
-    "tags": [
-      "natural",
-      "throat"
-    ],
-    "eta_min": 10
-  },
-  {
-    "product_id": "P053",
-    "name": "Ginger Tea Sachets (10)",
-    "category": "health",
-    "price_inr": 75,
-    "image_url": "https://placehold.co/200x200?text=Ginger+Tea",
-    "tags": [
-      "beverage",
-      "cold"
-    ],
-    "eta_min": 10
-  },
-  {
-    "product_id": "P054",
-    "name": "Crocin Tablets (OTC, 10)",
-    "category": "health",
-    "price_inr": 35,
-    "image_url": "https://placehold.co/200x200?text=Crocin",
-    "tags": [
-      "otc",
-      "fever"
-    ],
-    "eta_min": 10
-  },
-  {
-    "product_id": "P055",
-    "name": "Tissue Box",
-    "category": "health",
-    "price_inr": 60,
-    "image_url": "https://placehold.co/200x200?text=Tissues",
-    "tags": [
-      "essentials"
-    ],
-    "eta_min": 10
-  },
-  {
-    "product_id": "P060",
-    "name": "Atta 5kg",
-    "category": "staples",
-    "price_inr": 250,
-    "image_url": "https://placehold.co/200x200?text=Atta",
-    "tags": [
-      "staple",
-      "reorder"
-    ],
-    "eta_min": 20
-  },
-  {
-    "product_id": "P061",
-    "name": "Sugar 1kg",
-    "category": "staples",
-    "price_inr": 48,
-    "image_url": "https://placehold.co/200x200?text=Sugar",
-    "tags": [
-      "staple",
-      "reorder"
-    ],
-    "eta_min": 20
-  },
-  {
-    "product_id": "P062",
-    "name": "Tea Powder 250g",
-    "category": "staples",
-    "price_inr": 110,
-    "image_url": "https://placehold.co/200x200?text=Tea",
-    "tags": [
-      "staple",
-      "reorder"
-    ],
-    "eta_min": 20
-  },
-  {
-    "product_id": "P063",
-    "name": "Britannia Biscuits (pack of 4)",
-    "category": "staples",
-    "price_inr": 80,
-    "image_url": "https://placehold.co/200x200?text=Biscuits",
-    "tags": [
-      "snack",
-      "reorder"
-    ],
-    "eta_min": 20
-  },
-  {
-    "product_id": "P064",
-    "name": "Milk 1L",
-    "category": "staples",
-    "price_inr": 64,
-    "image_url": "https://placehold.co/200x200?text=Milk",
-    "tags": [
-      "staple",
-      "reorder"
-    ],
-    "eta_min": 20
-  },
-  {
-    "product_id": "P070",
-    "name": "Hyderabadi Chicken Biryani (serves 2)",
-    "category": "food",
-    "price_inr": 220,
-    "image_url": "https://placehold.co/200x200?text=Biryani",
-    "tags": [
-      "food",
-      "meal",
-      "main-course"
-    ],
-    "eta_min": 18
-  },
-  {
-    "product_id": "P071",
-    "name": "Veg Pulao (serves 2)",
-    "category": "food",
-    "price_inr": 150,
-    "image_url": "https://placehold.co/200x200?text=Pulao",
-    "tags": [
-      "food",
-      "meal",
-      "veg"
-    ],
-    "eta_min": 18
-  },
-  {
-    "product_id": "P072",
-    "name": "Butter Paneer (serves 2)",
-    "category": "food",
-    "price_inr": 190,
-    "image_url": "https://placehold.co/200x200?text=Butter+Paneer",
-    "tags": [
-      "food",
-      "meal",
-      "veg",
-      "main-course"
-    ],
-    "eta_min": 18
-  },
-  {
-    "product_id": "P073",
-    "name": "Tandoori Roti (6 pc)",
-    "category": "food",
-    "price_inr": 60,
-    "image_url": "https://placehold.co/200x200?text=Roti",
-    "tags": [
-      "food",
-      "meal",
-      "bread"
-    ],
-    "eta_min": 18
-  },
-  {
-    "product_id": "P074",
-    "name": "Veg Hakka Noodles (serves 2)",
-    "category": "food",
-    "price_inr": 130,
-    "image_url": "https://placehold.co/200x200?text=Noodles",
-    "tags": [
-      "food",
-      "meal",
-      "chinese"
-    ],
-    "eta_min": 18
-  },
-  {
-    "product_id": "P080",
-    "name": "AA Batteries (pack of 4)",
-    "category": "essentials",
-    "price_inr": 90,
-    "image_url": "https://placehold.co/200x200?text=AA+Batteries",
-    "tags": [
-      "electronics",
-      "remote",
-      "battery"
-    ],
-    "eta_min": 12
-  },
-  {
-    "product_id": "P081",
-    "name": "AAA Batteries (pack of 4)",
-    "category": "essentials",
-    "price_inr": 85,
-    "image_url": "https://placehold.co/200x200?text=AAA+Batteries",
-    "tags": [
-      "electronics",
-      "remote",
-      "battery"
-    ],
-    "eta_min": 12
-  },
-  {
-    "product_id": "P082",
-    "name": "USB-C Charging Cable",
-    "category": "essentials",
-    "price_inr": 199,
-    "image_url": "https://placehold.co/200x200?text=USB-C+Cable",
-    "tags": [
-      "electronics",
-      "charging"
-    ],
-    "eta_min": 14
-  },
-  {
-    "product_id": "P083",
-    "name": "Extension Board (4 socket)",
-    "category": "essentials",
-    "price_inr": 349,
-    "image_url": "https://placehold.co/200x200?text=Extension+Board",
-    "tags": [
-      "electronics",
-      "power"
-    ],
-    "eta_min": 16
-  },
-  {
-    "product_id": "P084",
-    "name": "Mosquito Repellent Refill",
-    "category": "monsoon",
-    "price_inr": 79,
-    "image_url": "https://placehold.co/200x200?text=Mosquito+Repellent",
-    "tags": [
-      "monsoon",
-      "home"
-    ],
-    "eta_min": 14
-  },
-  {
-    "product_id": "P085",
-    "name": "Compact Umbrella",
-    "category": "monsoon",
-    "price_inr": 299,
-    "image_url": "https://placehold.co/200x200?text=Umbrella",
-    "tags": [
-      "monsoon",
-      "rain"
-    ],
-    "eta_min": 16
-  },
-  {
-    "product_id": "P086",
-    "name": "Rakhi Set (2 pc)",
-    "category": "festival",
-    "price_inr": 120,
-    "image_url": "https://placehold.co/200x200?text=Rakhi",
-    "tags": [
-      "festival",
-      "rakshabandhan",
-      "rakhi"
-    ],
-    "eta_min": 16
-  },
-  {
-    "product_id": "P087",
-    "name": "Soan Papdi 250g",
-    "category": "festival",
-    "price_inr": 110,
-    "image_url": "https://placehold.co/200x200?text=Soan+Papdi",
-    "tags": [
-      "festival",
-      "sweets",
-      "dessert"
-    ],
-    "eta_min": 16
-  },
-  {
-    "product_id": "P088",
-    "name": "Roli Chawal Tikka Set",
-    "category": "festival",
-    "price_inr": 40,
-    "image_url": "https://placehold.co/200x200?text=Roli+Chawal",
-    "tags": [
-      "festival",
-      "pooja",
-      "rakshabandhan"
-    ],
-    "eta_min": 16
-  },
-  {
-    "product_id": "P089",
-    "name": "Disposable Plates (pack of 25)",
-    "category": "guests",
-    "price_inr": 99,
-    "image_url": "https://placehold.co/200x200?text=Plates",
-    "tags": [
-      "guests",
-      "party"
-    ],
-    "eta_min": 15
-  }
+  { "product_id": "P001", "name": "Eveready Candles (pack of 10)", "category": "power_cut", "price_inr": 45, "in_stock": false, "tags": ["light", "emergency"], "eta_min": 10 },
+  { "product_id": "P002", "name": "Wipro Emergency Rechargeable LED Bulb", "category": "power_cut", "price_inr": 399, "in_stock": true, "tags": ["light", "emergency", "rechargeable"], "eta_min": 12 },
+  { "product_id": "P003", "name": "Mi Power Bank 10000mAh", "category": "power_cut", "price_inr": 899, "in_stock": true, "tags": ["charging", "emergency"], "eta_min": 14 },
+  { "product_id": "P004", "name": "Maggi 2-Minute Masala Noodles (pack of 4)", "category": "power_cut", "price_inr": 56, "in_stock": true, "tags": ["food", "instant", "no-fridge"], "eta_min": 10 },
+  { "product_id": "P005", "name": "Thums Up Cans (pack of 6, 300ml)", "category": "power_cut", "price_inr": 240, "in_stock": true, "tags": ["beverage", "no-fridge"], "eta_min": 12 },
+  { "product_id": "P006", "name": "Eveready Rechargeable LED Lantern", "category": "power_cut", "price_inr": 749, "in_stock": true, "tags": ["light", "emergency", "rechargeable"], "eta_min": 14 },
+  { "product_id": "P020", "name": "Omron BP Monitor Power Adapter", "category": "power_cut", "price_inr": 449, "in_stock": true, "tags": ["health", "elderly"], "eta_min": 18 },
+  { "product_id": "P021", "name": "Philips Rechargeable LED Night Light", "category": "power_cut", "price_inr": 299, "in_stock": true, "tags": ["baby", "light"], "eta_min": 12 },
+
+  { "product_id": "P010", "name": "Amul Malai Paneer 200g", "category": "guests", "price_inr": 95, "in_stock": true, "tags": ["food", "main-course"], "eta_min": 12 },
+  { "product_id": "P011", "name": "iD Fresh Wholewheat Naan (4 pc)", "category": "guests", "price_inr": 85, "in_stock": true, "tags": ["food", "main-course"], "eta_min": 15 },
+  { "product_id": "P012", "name": "Coca-Cola 1.25L", "category": "guests", "price_inr": 70, "in_stock": true, "tags": ["beverage"], "eta_min": 12 },
+  { "product_id": "P013", "name": "Haldiram's Classic Namkeen Mix 200g", "category": "guests", "price_inr": 55, "in_stock": true, "tags": ["snack"], "eta_min": 12 },
+  { "product_id": "P014", "name": "Haldiram's Gulab Jamun 1kg", "category": "guests", "price_inr": 199, "in_stock": false, "tags": ["dessert"], "eta_min": 15 },
+  { "product_id": "P015", "name": "Party Ice Cubes 1kg", "category": "guests", "price_inr": 45, "in_stock": true, "tags": ["beverage", "cooling"], "eta_min": 18 },
+  { "product_id": "P016", "name": "iD Fresh Malabar Parotta (5 pc)", "category": "guests", "price_inr": 99, "in_stock": true, "tags": ["food", "main-course"], "eta_min": 15 },
+  { "product_id": "P089", "name": "Ezee Disposable Plates (pack of 25)", "category": "guests", "price_inr": 99, "in_stock": true, "tags": ["guests", "party"], "eta_min": 15 },
+
+  { "product_id": "P030", "name": "Eco Clay Diyas (pack of 12)", "category": "pooja", "price_inr": 60, "in_stock": true, "tags": ["pooja"], "eta_min": 18 },
+  { "product_id": "P031", "name": "Mangalam Pure Camphor (Kapur) 50g", "category": "pooja", "price_inr": 55, "in_stock": true, "tags": ["pooja"], "eta_min": 18 },
+  { "product_id": "P032", "name": "Cycle Three-in-One Agarbatti Pack", "category": "pooja", "price_inr": 70, "in_stock": true, "tags": ["pooja"], "eta_min": 18 },
+  { "product_id": "P033", "name": "Moli Kalawa Sacred Red Thread", "category": "pooja", "price_inr": 20, "in_stock": true, "tags": ["pooja"], "eta_min": 18 },
+  { "product_id": "P034", "name": "Pooja Coconut (2 pc)", "category": "pooja", "price_inr": 60, "in_stock": true, "tags": ["pooja"], "eta_min": 18 },
+  { "product_id": "P035", "name": "Fresh Marigold Garland (Genda Phool)", "category": "pooja", "price_inr": 50, "in_stock": true, "tags": ["pooja"], "eta_min": 18 },
+  { "product_id": "P036", "name": "Gangajal Holy Water 500ml", "category": "pooja", "price_inr": 40, "in_stock": true, "tags": ["pooja"], "eta_min": 22 },
+  { "product_id": "P037", "name": "Cycle Sambrani Dhoop Cups (12)", "category": "pooja", "price_inr": 65, "in_stock": true, "tags": ["pooja"], "eta_min": 18 },
+
+  { "product_id": "P040", "name": "Nescafé Classic Coffee Sachets (pack of 12)", "category": "exam", "price_inr": 90, "in_stock": true, "tags": ["beverage", "energy"], "eta_min": 10 },
+  { "product_id": "P041", "name": "Yoga Bar Multigrain Energy Bars (pack of 6)", "category": "exam", "price_inr": 250, "in_stock": true, "tags": ["snack", "energy"], "eta_min": 10 },
+  { "product_id": "P042", "name": "Classmate Sticky Notes Pad", "category": "exam", "price_inr": 50, "in_stock": true, "tags": ["stationery"], "eta_min": 10 },
+  { "product_id": "P043", "name": "Camlin Highlighter Set (5 colors)", "category": "exam", "price_inr": 120, "in_stock": true, "tags": ["stationery"], "eta_min": 10 },
+  { "product_id": "P044", "name": "Parle Monaco Salted Crackers", "category": "exam", "price_inr": 40, "in_stock": true, "tags": ["snack"], "eta_min": 10 },
+  { "product_id": "P045", "name": "Red Bull Energy Drink (pack of 4, 250ml)", "category": "exam", "price_inr": 440, "in_stock": true, "tags": ["beverage", "energy"], "eta_min": 10 },
+
+  { "product_id": "P050", "name": "Vicks VapoRub 50g", "category": "health", "price_inr": 160, "in_stock": true, "tags": ["otc", "cold"], "eta_min": 10 },
+  { "product_id": "P051", "name": "Strepsils Original Lozenges (pack of 16)", "category": "health", "price_inr": 95, "in_stock": true, "tags": ["otc", "throat"], "eta_min": 10 },
+  { "product_id": "P052", "name": "Dabur Honey 250g", "category": "health", "price_inr": 165, "in_stock": true, "tags": ["natural", "throat"], "eta_min": 10 },
+  { "product_id": "P053", "name": "Organic India Tulsi Ginger Tea (25 bags)", "category": "health", "price_inr": 190, "in_stock": true, "tags": ["beverage", "cold"], "eta_min": 10 },
+  { "product_id": "P054", "name": "Crocin Advance Tablets (OTC, strip of 15)", "category": "health", "price_inr": 35, "in_stock": true, "tags": ["otc", "fever"], "eta_min": 10 },
+  { "product_id": "P055", "name": "Origami Soft Tissue Box (100 pulls)", "category": "health", "price_inr": 65, "in_stock": true, "tags": ["essentials"], "eta_min": 10 },
+  { "product_id": "P056", "name": "Dolo 650 Tablets (OTC, strip of 15)", "category": "health", "price_inr": 33, "in_stock": true, "tags": ["otc", "fever"], "eta_min": 10 },
+  { "product_id": "P057", "name": "Electral ORS Sachets (pack of 4)", "category": "health", "price_inr": 80, "in_stock": true, "tags": ["otc", "hydration"], "eta_min": 10 },
+
+  { "product_id": "P060", "name": "Aashirvaad Shudh Atta 5kg", "category": "staples", "price_inr": 275, "in_stock": true, "tags": ["staple", "reorder"], "eta_min": 20 },
+  { "product_id": "P061", "name": "Tata Sugar 1kg", "category": "staples", "price_inr": 55, "in_stock": true, "tags": ["staple", "reorder"], "eta_min": 20 },
+  { "product_id": "P062", "name": "Tata Tea Gold 250g", "category": "staples", "price_inr": 140, "in_stock": true, "tags": ["staple", "reorder"], "eta_min": 18 },
+  { "product_id": "P063", "name": "Britannia Marie Gold Biscuits (pack of 6)", "category": "staples", "price_inr": 90, "in_stock": true, "tags": ["snack", "reorder"], "eta_min": 18 },
+  { "product_id": "P064", "name": "Amul Taaza Toned Milk 1L", "category": "staples", "price_inr": 66, "in_stock": true, "tags": ["staple", "reorder"], "eta_min": 15 },
+  { "product_id": "P065", "name": "Tata Salt 1kg", "category": "staples", "price_inr": 28, "in_stock": true, "tags": ["staple", "reorder"], "eta_min": 20 },
+  { "product_id": "P066", "name": "Fortune Sunlite Refined Sunflower Oil 1L", "category": "staples", "price_inr": 145, "in_stock": true, "tags": ["staple", "reorder"], "eta_min": 20 },
+  { "product_id": "P067", "name": "India Gate Basmati Rice 5kg", "category": "staples", "price_inr": 540, "in_stock": true, "tags": ["staple", "reorder"], "eta_min": 20 },
+
+  { "product_id": "P070", "name": "Behrouz Hyderabadi Chicken Biryani (serves 2)", "category": "food", "price_inr": 349, "in_stock": true, "tags": ["food", "meal", "main-course"], "eta_min": 22 },
+  { "product_id": "P071", "name": "FreshMenu Veg Pulao (serves 2)", "category": "food", "price_inr": 199, "in_stock": true, "tags": ["food", "meal", "veg"], "eta_min": 20 },
+  { "product_id": "P072", "name": "Butter Paneer Masala (serves 2)", "category": "food", "price_inr": 230, "in_stock": true, "tags": ["food", "meal", "veg", "main-course"], "eta_min": 20 },
+  { "product_id": "P073", "name": "Tandoori Roti (6 pc)", "category": "food", "price_inr": 70, "in_stock": true, "tags": ["food", "meal", "bread"], "eta_min": 18 },
+  { "product_id": "P074", "name": "Veg Hakka Noodles (serves 2)", "category": "food", "price_inr": 160, "in_stock": true, "tags": ["food", "meal", "chinese"], "eta_min": 20 },
+
+  { "product_id": "P080", "name": "Duracell AA Batteries (pack of 4)", "category": "essentials", "price_inr": 130, "in_stock": true, "tags": ["electronics", "remote", "battery"], "eta_min": 12 },
+  { "product_id": "P081", "name": "Duracell AAA Batteries (pack of 4)", "category": "essentials", "price_inr": 120, "in_stock": true, "tags": ["electronics", "remote", "battery"], "eta_min": 12 },
+  { "product_id": "P082", "name": "boAt USB-C Charging Cable 1m", "category": "essentials", "price_inr": 199, "in_stock": true, "tags": ["electronics", "charging"], "eta_min": 14 },
+  { "product_id": "P083", "name": "GM 4-Socket Extension Board", "category": "essentials", "price_inr": 399, "in_stock": true, "tags": ["electronics", "power"], "eta_min": 16 },
+
+  { "product_id": "P084", "name": "Good Knight Activ+ Mosquito Repellent Refill", "category": "monsoon", "price_inr": 78, "in_stock": true, "tags": ["monsoon", "home"], "eta_min": 14 },
+  { "product_id": "P085", "name": "Cello Compact Folding Umbrella", "category": "monsoon", "price_inr": 350, "in_stock": true, "tags": ["monsoon", "rain"], "eta_min": 16 },
+  { "product_id": "P091", "name": "Duckback Foldable Raincoat", "category": "monsoon", "price_inr": 450, "in_stock": true, "tags": ["monsoon", "rain"], "eta_min": 18 },
+
+  { "product_id": "P086", "name": "Designer Rakhi Set (2 pc)", "category": "festival", "price_inr": 150, "in_stock": true, "tags": ["festival", "rakshabandhan", "rakhi"], "eta_min": 16 },
+  { "product_id": "P087", "name": "Bikano Soan Papdi 250g", "category": "festival", "price_inr": 110, "in_stock": true, "tags": ["festival", "sweets", "dessert"], "eta_min": 16 },
+  { "product_id": "P088", "name": "Roli Chawal Tikka Pooja Set", "category": "festival", "price_inr": 40, "in_stock": true, "tags": ["festival", "pooja", "rakshabandhan"], "eta_min": 16 },
+  { "product_id": "P093", "name": "Haldiram's Kaju Katli 250g", "category": "festival", "price_inr": 260, "in_stock": true, "tags": ["festival", "sweets", "dessert"], "eta_min": 16 },
+  { "product_id": "P094", "name": "Cadbury Celebrations Gift Box", "category": "festival", "price_inr": 180, "in_stock": true, "tags": ["festival", "sweets", "dessert"], "eta_min": 16 }
 ]

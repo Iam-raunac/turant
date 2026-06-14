@@ -1,3 +1,5 @@
+import ProductThumb from "./ProductThumb.jsx";
+
 function ConfidenceDot({ score }) {
   const level = score >= 0.8 ? "high" : score >= 0.6 ? "med" : "low";
   return (
@@ -10,9 +12,7 @@ function ConfidenceDot({ score }) {
 function CartItem({ item, onRemove }) {
   return (
     <li className="cart-item">
-      <div className="cart-item-thumb">
-        <span>📦</span>
-      </div>
+      <ProductThumb item={item} size={56} />
       <div className="cart-item-body">
         <div className="cart-item-row1">
           <span className="cart-item-name">{item.name}</span>

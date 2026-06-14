@@ -500,6 +500,31 @@ button:disabled {
   font-size: 22px;
 }
 
+/* Clean category-icon thumbnail (no external product photos). */
+.thumb {
+  flex-shrink: 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #f3f4f6;
+  border: 1px solid #eceef1;
+}
+.thumb-cat {
+  background: linear-gradient(135deg, #f7fafc 0%, #eef2f6 100%);
+}
+.thumb-power_cut { background: linear-gradient(135deg, #fff7ed, #ffedd5); }
+.thumb-guests    { background: linear-gradient(135deg, #fef2f2, #fee2e2); }
+.thumb-pooja     { background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+.thumb-exam      { background: linear-gradient(135deg, #eff6ff, #dbeafe); }
+.thumb-health    { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
+.thumb-staples   { background: linear-gradient(135deg, #f5f3ff, #ede9fe); }
+.thumb-food      { background: linear-gradient(135deg, #fff7ed, #ffe4cc); }
+.thumb-essentials{ background: linear-gradient(135deg, #f8fafc, #e2e8f0); }
+.thumb-monsoon   { background: linear-gradient(135deg, #ecfeff, #cffafe); }
+.thumb-festival  { background: linear-gradient(135deg, #fdf2f8, #fce7f3); }
+
 .cart-item-body {
   flex: 1;
   min-width: 0;
@@ -882,203 +907,154 @@ body {
   background: #eaeded;
 }
 
-/* ---- Amazon header ---- */
+/* ---- Amazon Now header (mobile-first, app style) ---- */
 .az-header {
   position: sticky;
   top: 0;
   z-index: 20;
 }
 
-.az-header-main {
+/* Top bar: ⚡ badge · centered amazon now logo · cart */
+.az-topbar {
   background: #131921;
   color: #fff;
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  padding: 10px 14px;
+}
+
+.az-fast-badge {
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 8px 14px;
-  flex-wrap: nowrap;
+  justify-content: center;
+  background: var(--amzn-orange);
+  color: #131921;
+  border-radius: 7px;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .az-logo {
+  justify-self: center;
   display: flex;
   align-items: baseline;
-  gap: 2px;
-  padding: 6px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.az-logo:hover {
-  border-color: #fff;
+  gap: 3px;
 }
 
 .az-logo-text {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 21px;
+  font-weight: 800;
   letter-spacing: -0.5px;
 }
 
 .az-logo-now {
-  font-size: 13px;
-  color: var(--amzn-orange);
-  font-weight: 700;
-}
-
-.az-bolt {
   font-size: 15px;
-}
-
-.az-location {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.az-location:hover {
-  border-color: #fff;
-}
-
-.az-location-pin {
-  font-size: 16px;
-}
-
-.az-location-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
-.az-location-deliver {
-  font-size: 11px;
-  color: #ccc;
-}
-
-.az-location-city {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.az-search {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  background: #fff;
-  border-radius: 6px;
-  overflow: hidden;
-  min-width: 0;
-}
-
-.az-search:focus-within {
-  box-shadow: 0 0 0 3px var(--amzn-orange);
-}
-
-.az-search-mode {
-  background: #e6e6e6;
-  color: #111;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 9px 10px;
-  white-space: nowrap;
-  border-right: 1px solid #cdcdcd;
-}
-
-.az-search-input {
-  flex: 1;
-  border: 0;
-  outline: 0;
-  padding: 9px 10px;
-  font-size: 14px;
-  color: #111;
-  min-width: 0;
-  cursor: default;
-}
-
-.az-search-btn {
-  background: var(--amzn-orange);
-  padding: 9px 14px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.az-account,
-.az-cart {
-  padding: 6px;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.az-account:hover,
-.az-cart:hover {
-  border-color: #fff;
-}
-
-.az-account {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
-.az-account-hi {
-  font-size: 12px;
-  color: #ddd;
-}
-
-.az-account-sub {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.az-cart {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.az-cart-icon {
-  font-size: 20px;
-}
-
-.az-cart-count {
-  color: var(--amzn-orange);
-  font-weight: 700;
-}
-
-.az-subbar {
-  background: var(--amzn-navy-2);
+  font-weight: 800;
   color: #fff;
-  font-size: 13px;
-  padding: 7px 14px;
+  background: var(--amzn-orange);
+  color: #131921;
+  padding: 0 5px;
+  border-radius: 4px;
+  transform: translateY(-1px);
+}
+
+.az-topbar-right {
+  justify-self: end;
   display: flex;
-  gap: 10px;
   align-items: center;
-  flex-wrap: wrap;
+}
+
+.az-cart-mini {
+  font-size: 19px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.az-cart-mini b {
+  color: var(--amzn-orange);
+  font-size: 13px;
+}
+
+/* Delivery promise pill row */
+.az-deliverbar {
+  background: #232f3e;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.az-deliver-eta {
+  background: var(--amzn-orange);
+  color: #131921;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.az-deliver-to {
+  color: #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.az-deliver-to strong {
+  color: #fff;
+}
+
+.az-deliver-chevron {
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+/* Confident Mode sub-bar */
+.az-subbar {
+  background: #37475a;
+  color: #fff;
+  font-size: 12.5px;
+  padding: 6px 14px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .az-subbar-tag {
   background: var(--amzn-orange);
   color: #131921;
-  font-weight: 700;
+  font-weight: 800;
   padding: 1px 7px;
   border-radius: 4px;
   font-size: 11px;
 }
 
-.az-subbar-dim {
-  color: #cbd5e1;
+.az-subbar-mode {
+  font-weight: 700;
 }
 
-@media (max-width: 720px) {
-  .az-location,
-  .az-account {
-    display: none;
+.az-subbar-dim {
+  color: #b9c4d0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* On wider screens keep the app feel but center the chrome */
+@media (min-width: 721px) {
+  .az-topbar,
+  .az-deliverbar,
+  .az-subbar {
+    padding-left: max(14px, calc((100% - 720px) / 2));
+    padding-right: max(14px, calc((100% - 720px) / 2));
   }
 }
 

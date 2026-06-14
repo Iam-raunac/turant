@@ -1,54 +1,36 @@
 export default function Header({ user, cartCount = 0 }) {
+  const name = user?.id ? user.name : null;
+
   return (
     <header className="az-header">
-      <div className="az-header-main">
+      {/* Top bar — centered Amazon Now logo, app-style icons */}
+      <div className="az-topbar">
+        <span className="az-fast-badge" aria-hidden="true">⚡</span>
         <div className="az-logo">
           <span className="az-logo-text">amazon</span>
           <span className="az-logo-now">now</span>
-          <span className="az-bolt">⚡</span>
         </div>
-
-        <div className="az-location">
-          <span className="az-location-pin">📍</span>
-          <div className="az-location-text">
-            <span className="az-location-deliver">Deliver in 10 min to</span>
-            <span className="az-location-city">
-              {user?.id ? user.name : "your area"}
-            </span>
-          </div>
-        </div>
-
-        <div className="az-search">
-          <span className="az-search-mode">Confident</span>
-          <input
-            className="az-search-input"
-            placeholder="Turant — tell us your situation, get one cart"
-            readOnly
-          />
-          <span className="az-search-btn">🔍</span>
-        </div>
-
-        <div className="az-account">
-          <span className="az-account-hi">
-            Hello, {user?.id ? user.name : "sign in"}
+        <div className="az-topbar-right">
+          <span className="az-cart-mini" aria-label={`${cartCount} items in cart`}>
+            🛒<b>{cartCount}</b>
           </span>
-          <span className="az-account-sub">Account & Lists</span>
-        </div>
-
-        <div className="az-cart">
-          <span className="az-cart-icon">🛒</span>
-          <span className="az-cart-count">{cartCount}</span>
         </div>
       </div>
 
+      {/* Delivery promise pill — the Amazon Now fast-delivery row */}
+      <div className="az-deliverbar">
+        <span className="az-deliver-eta">⚡ 10 min</span>
+        <span className="az-deliver-to">
+          Deliver to <strong>{name || "your area"}</strong>
+        </span>
+        <span className="az-deliver-chevron">▾</span>
+      </div>
+
+      {/* Confident Mode sub-bar — Turant's thesis, no search/browse */}
       <div className="az-subbar">
         <span className="az-subbar-tag">Turant</span>
-        <span>Confident Mode</span>
-        <span className="az-subbar-dim">· Power Cut</span>
-        <span className="az-subbar-dim">· Guests</span>
-        <span className="az-subbar-dim">· Pooja</span>
-        <span className="az-subbar-dim">· Quick Health</span>
-        <span className="az-subbar-dim">· Exam Night</span>
+        <span className="az-subbar-mode">Confident Mode</span>
+        <span className="az-subbar-dim">· no search — just say it</span>
       </div>
     </header>
   );

@@ -42,6 +42,7 @@ Input contract:
 
 import json
 import os
+import re
 import time
 from decimal import Decimal
 
@@ -106,6 +107,16 @@ PRODUCT_REPLENISH_DAYS = {
 # typical life (e.g. 0.8 → flag when ~80% of the cycle has elapsed).
 REORDER_THRESHOLD = 0.8
 SECONDS_PER_DAY = 86400
+
+# Generic category / packaging words that appear in product names. They must
+# NOT count as "the user explicitly asked for this item" when deciding whether
+# to bring back a previously-removed item — only distinctive/brand tokens do.
+_GENERIC_NAME_WORDS = {
+    "pack", "tin", "bottle", "box", "set", "mix", "powder", "tablets", "tablet",
+    "sachets", "sachet", "refill", "cubes", "pcs", "pieces", "litre", "liter",
+    "ready", "eat", "namkeen", "biscuits", "biscuit", "noodles", "snack",
+    "snacks", "drink", "drinks", "pack of",
+}
 
 
 def replenish_days_for(product):
@@ -306,6 +317,28 @@ def record_removal(user_id, items, context=None):
     return existing
 
 
+# Tags / categories that mark a product as edible food or drink. Used to gate
+# substitutions so a non-food item (e.g. a Rakhi Set) can NEVER replace a food
+# item (e.g. Soan Papdi) just because they share a broad tag like "festival".
+FOOD_TAGS = {
+    "food", "snack", "snacks", "dessert", "sweets", "beverage", "beverages",
+    "meal", "main-course", "instant", "no-fridge",
+}
+FOOD_CATEGORIES = {"food", "staples", "snacks", "beverages", "sweets", "noodles", "biscuits"}
+
+
+def is_food_product(product):
+    """True if the product is something you eat or drink. Decided by tags first
+    (most reliable here), then by category. A broad situational tag like
+    "festival" or "guests" alone does NOT make something food."""
+    if not product:
+        return False
+    tags = {t.lower() for t in product.get("tags", [])}
+    if tags & FOOD_TAGS:
+        return True
+    return (product.get("category", "").lower() in FOOD_CATEGORIES)
+
+
 def find_substitute(product_id, catalog, exclude_ids=None):
     """Feature: Smart Substitution.
 
@@ -313,6 +346,10 @@ def find_substitute(product_id, catalog, exclude_ids=None):
     ranked by tag overlap (semantic similarity) first, then same-category,
     then closest price. Falls back to same category if nothing shares a tag.
     Returns the full catalog product dict (or None if no sensible swap exists).
+
+    HARD GATE: food is only ever swapped for food, and non-food only for
+    non-food. This stops cross-category nonsense like a Rakhi Set being offered
+    in place of an out-of-stock sweet because both carry a "festival" tag.
     """
     exclude = set(exclude_ids or [])
     exclude.add(product_id)
@@ -324,8 +361,14 @@ def find_substitute(product_id, catalog, exclude_ids=None):
     target_tags = set(target.get("tags", []))
     target_category = target.get("category")
     target_price = float(target.get("price_inr", 0))
+    target_is_food = is_food_product(target)
 
-    pool = [p for p in catalog if p["product_id"] not in exclude]
+    # Only consider products on the same side of the food / non-food line.
+    pool = [
+        p for p in catalog
+        if p["product_id"] not in exclude
+        and is_food_product(p) == target_is_food
+    ]
 
     def overlap_of(p):
         return len(target_tags & set(p.get("tags", [])))
@@ -403,8 +446,9 @@ LEARNED-HISTORY RULES (READ CAREFULLY — relevance is an ABSOLUTE gate):
 3. Use learned history ONLY to choose BETWEEN two items that both already fit
    the situation (e.g. prefer the user's usual cola brand among drinks), or to
    add ONE clearly-relevant favorite.
-4. Only when an item is genuinely included AND it is on the learned list,
-   set "personalized": true and add "You order this often" to the reason.
+4. Do NOT add "You order this often" or similar wording to the reason — the
+   system labels personalized items automatically. Keep each reason focused on
+   why the item fits the CURRENT situation.
 5. A short, correct cart (even 2-3 items) is far better than padding it with
    irrelevant favorites. NEVER pad a cart to hit a size — relevance over count.
 """
@@ -469,8 +513,10 @@ def build_personalization_block(user_profile):
 PERSONALIZATION RULES:
 - When picking items where the user has a known brand preference for that
   category, prefer products matching those brands when available.
-- In the "reason" field for those items, briefly acknowledge it
-  (e.g. "Maggi — your usual choice").
+- Do NOT write phrases like "your usual choice", "your usual brand", or
+  "you order this often" in the reason yourself — the system adds those
+  automatically and correctly. Just give a clear, functional one-line reason
+  for why the item fits THIS situation.
 - Use household context to tune the cart (e.g. elderly + BP medication →
   prioritize backup power for medical devices).
 - Do NOT mention preferences for items with no preference match."""
@@ -746,12 +792,40 @@ def _json_safe(obj):
     return obj
 
 
+def _strip_personalization_phrases(reason):
+    """Remove any personalization phrasing the MODEL wrote into a reason.
+
+    Nova Lite frequently echoes the prompt's example ("Maggi — your usual
+    choice") onto unrelated items, and also duplicates "you order this often".
+    We strip ALL such phrases here and re-add the correct one deterministically
+    so the wrong brand can never appear and nothing is duplicated.
+    """
+    if not reason:
+        return ""
+    r = reason
+    # "<Brand> — your usual choice." (the literal example the model copies)
+    r = re.sub(r"\b[\w'&.\-]+\s*[—\-]\s*your usual choice\b[^.]*\.?", "", r, flags=re.I)
+    # bare "your usual choice/brand ..." and "you order this often ..."
+    r = re.sub(r"\byour usual (?:choice|brand)\b[^.]*\.?", "", r, flags=re.I)
+    r = re.sub(r"\byou order this often\b[^.]*\.?", "", r, flags=re.I)
+    r = re.sub(r"\s{2,}", " ", r).strip(" .,;:—-")
+    if r:
+        r = r[0].upper() + r[1:]
+        if not r.endswith((".", "!", "?")):
+            r += "."
+    return r
+
+
 def apply_personalization_flags(result, user_profile):
     """
     Deterministic safety net: guarantees personalization_applied and
     personalized flags are correct, even if Nova Lite skips them.
     Matches item names against the user's favorite_brands AND against
     products they've actually ordered before (learned history).
+
+    The model is NOT trusted to write personalization phrases — it copies the
+    prompt example onto the wrong item. We strip whatever it wrote and re-add
+    the correct acknowledgement based on the ACTUAL match.
     """
     favorite_brands = []
     learned_ids = set()
@@ -766,29 +840,26 @@ def apply_personalization_flags(result, user_profile):
         for item in cart.get("items", []):
             name = item.get("name", "").lower()
             pid = item.get("product_id")
+            # Always discard model-written personalization text first.
+            base_reason = _strip_personalization_phrases(item.get("reason") or "")
+
             matched_brand = None
             for brand in favorite_brands:
                 if brand.lower() in name:
                     matched_brand = brand
                     break
+
             if matched_brand:
                 item["personalized"] = True
                 any_personalized = True
-                reason = (item.get("reason") or "").strip()
-                rl = reason.lower()
-                # Only add our acknowledgement if the model didn't already say
-                # it (avoids "...your usual choice. Maggi — your usual choice.")
-                if matched_brand.lower() not in rl and "usual choice" not in rl:
-                    item["reason"] = f"{reason} {matched_brand} — your usual choice.".strip()
+                item["reason"] = f"{base_reason} {matched_brand} — your usual choice.".strip()
             elif pid in learned_ids:
                 item["personalized"] = True
                 any_personalized = True
-                reason = (item.get("reason") or "").strip()
-                rl = reason.lower()
-                if "order this often" not in rl and "you order" not in rl:
-                    item["reason"] = f"{reason} You order this often.".strip()
+                item["reason"] = f"{base_reason} You order this often.".strip()
             else:
-                item.setdefault("personalized", False)
+                item["personalized"] = False
+                item["reason"] = base_reason
         cart["personalization_applied"] = any_personalized
         return cart
 
@@ -833,6 +904,35 @@ def fix_safety_note(cart):
     return cart
 
 
+def enrich_items_from_catalog(cart, catalog):
+    """Deterministic anti-hallucination + image enrichment.
+
+    The model only chooses product_ids. Here we overwrite each item's
+    authoritative fields (name, price_inr, eta_min, category, image_url,
+    in_stock) from the REAL catalog, and DROP any item whose product_id is not
+    in the catalog (a hallucinated product). Prices and names can never be
+    invented, and every item carries a real image URL. Recomputes the total.
+    """
+    items = cart.get("items")
+    if items is None:
+        return cart
+    by_id = {p["product_id"]: p for p in catalog}
+    kept = []
+    for it in items:
+        product = by_id.get(it.get("product_id"))
+        if not product:
+            continue  # hallucinated product_id — drop it
+        it["name"] = product.get("name", it.get("name"))
+        it["price_inr"] = product.get("price_inr", it.get("price_inr", 0))
+        it["eta_min"] = product.get("eta_min", it.get("eta_min", 12))
+        it["category"] = product.get("category")
+        it["in_stock"] = product.get("in_stock", True)
+        kept.append(it)
+    cart["items"] = kept
+    cart["total_inr"] = sum(int(i.get("price_inr", 0) or 0) for i in kept)
+    return cart
+
+
 def mentions_health_symptom(user_text):
     text = (user_text or "").lower()
     return any(kw in text for kw in HEALTH_KEYWORDS)
@@ -853,6 +953,62 @@ def strip_medical_when_no_symptom(cart, user_text, catalog):
         return cart
     cat_by_id = {p["product_id"]: p.get("category") for p in catalog}
     kept = [it for it in items if cat_by_id.get(it.get("product_id")) != "health"]
+    if len(kept) != len(items):
+        cart["items"] = kept
+        cart["total_inr"] = sum(int(i.get("price_inr", 0) or 0) for i in kept)
+    return cart
+
+
+def _user_named_item(item_name, user_text):
+    """True if the user's CURRENT message explicitly names this item (so a
+    previously-removed item can be brought back on request).
+
+    Only DISTINCTIVE tokens count (brand / proper names like "Haldiram",
+    "Britannia", "Gulab Jamun"). Generic category/packaging words ("namkeen",
+    "snacks", "pack", "tin"…) must NOT resurrect a specifically-removed item —
+    otherwise asking for "snacks" would silently bring back the very item the
+    user just removed.
+    """
+    text = (user_text or "").lower()
+    if not text:
+        return False
+    for token in re.findall(r"[a-z]{4,}", (item_name or "").lower()):
+        if token in _GENERIC_NAME_WORDS:
+            continue
+        if token in text:
+            return True
+    return False
+
+
+def strip_disliked_items(cart, user_profile, user_text):
+    """Confidence Feedback Loop — HARD enforcement.
+
+    The user removed these items before, so they must NOT silently reappear.
+    The prompt asks the model to avoid them, but the model is unreliable and
+    keeps re-adding favorites (e.g. Haldiram). This deterministically drops any
+    disliked item unless the user's CURRENT message explicitly asks for it by
+    name, then recomputes the total. Code guarantees the rule.
+    """
+    if not user_profile:
+        return cart
+    disliked = user_profile.get("disliked_items") or {}
+    if not disliked:
+        return cart
+    items = cart.get("items")
+    if not items:
+        return cart
+
+    kept = []
+    for it in items:
+        info = disliked.get(it.get("product_id"))
+        if info:
+            name = info.get("name") or it.get("name") or ""
+            if _user_named_item(name, user_text):
+                kept.append(it)  # user explicitly asked for it back
+            # otherwise drop it
+        else:
+            kept.append(it)
+
     if len(kept) != len(items):
         cart["items"] = kept
         cart["total_inr"] = sum(int(i.get("price_inr", 0) or 0) for i in kept)
@@ -960,12 +1116,22 @@ def lambda_handler(event, context):
 
         result = parse_model_output(raw_output)
 
+        # Deterministic enrichment FIRST: authoritative name/price/eta/image from
+        # the catalog, and drop any hallucinated product_id.
+        if "items" in result:
+            enrich_items_from_catalog(result, catalog)
+        elif "carts" in result:
+            for cart in result["carts"]:
+                enrich_items_from_catalog(cart, catalog)
+
         # Deterministic guard: drop medical/OTC items if no symptom mentioned.
         if "items" in result:
             strip_medical_when_no_symptom(result, user_text, catalog)
+            strip_disliked_items(result, user_profile, user_text)
         elif "carts" in result:
             for cart in result["carts"]:
                 strip_medical_when_no_symptom(cart, user_text, catalog)
+                strip_disliked_items(cart, user_profile, user_text)
 
         result = apply_personalization_flags(result, user_profile)
 
@@ -977,7 +1143,7 @@ def lambda_handler(event, context):
                 fix_delivery_note(cart)
                 fix_safety_note(cart)
 
-        return _response(200, result)
+        return _response(200, _json_safe(result))
 
     except json.JSONDecodeError as e:
         return _response(500, {"error": "Model returned invalid JSON", "details": str(e)})

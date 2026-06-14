@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ProductThumb from "./ProductThumb.jsx";
 
 // Proactive Feature B — Reorder / Replenishment Prediction.
 //
@@ -35,6 +36,7 @@ export default function ReorderSuggestion({ profile, onReorder }) {
       <ul className="reorder-list">
         {suggestions.map((s) => (
           <li key={s.product_id} className="reorder-item">
+            <ProductThumb item={s} size={40} />
             <div className="reorder-item-text">
               <span className="reorder-item-name">{s.name}</span>
               <span className="reorder-item-meta">
