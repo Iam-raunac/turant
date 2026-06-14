@@ -766,7 +766,7 @@ def call_bedrock(prompt_text, max_tokens=1800):
     response = bedrock.converse(
         modelId=MODEL_ID,
         messages=[{"role": "user", "content": [{"text": prompt_text}]}],
-        inferenceConfig={"maxTokens": max_tokens, "temperature": 0.3},
+        inferenceConfig={"maxTokens": max_tokens, "temperature": 0},
     )
     return response["output"]["message"]["content"][0]["text"]
 
