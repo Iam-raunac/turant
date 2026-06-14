@@ -1,324 +1,232 @@
 # Turant — Confident Mode for Amazon Now
-### Product Requirements Document
-### HackOn with Amazon 6.0 · Problem Statement 2
+**Product Requirements Document**
+HackOn with Amazon 6.0 · Problem Statement 2: Reimagining Urgent Shopping
+Team repo: github.com/Iam-raunac/turant
 
 ---
 
-## Quick context for the reader
+## Before the specs: the one thing we kept coming back to
 
-Before getting into specs, here's the one thing our team kept coming back to during the planning phase.
+Quick-commerce in India won the delivery race a while ago. Ten minutes, sometimes eight. That fight is over.
 
-Quick-commerce in India has solved delivery. 10 minutes, sometimes 8. The race ended a while ago. What nobody has solved is the part **before** the delivery — the 4 to 6 minute mess where the customer is staring at 47 results and slowly losing confidence.
+The part nobody fixed is what happens *before* the delivery clock even starts — the four to six minutes a customer spends turning "I have a situation" into "here are the exact products I should buy." That translation step is the whole problem. And it's hardest at the exact moment the customer is least able to do it: a power cut, a fever at 2am, guests at the door.
 
-That's the gap we're going after. Not faster delivery. Faster *decisions*.
-
----
-
-## 1. The one-line pitch
-
-> Amazon Now today makes you search. Turant lets you tap a situation, snap a photo, or just speak — and one explained cart shows up in under 10 seconds.
-
-That's it. The rest of this doc is us defending that idea.
+So we didn't build faster delivery. We built faster *decisions*. That distinction shaped every call we made over the 48 hours.
 
 ---
 
-## 2. Who we built this for
+## 1. The pitch in one line
 
-### Mrs. Lakshmi Iyer, 58, Chennai
+Amazon Now today makes you search. Turant lets you say what's happening — in whatever language is already in your head — and one explained cart shows up in under ten seconds.
 
-She used to teach Class 8 Mathematics. Now retired, lives with her husband in a flat near Mylapore. Her daughter visits every Saturday from Bangalore. She speaks Tamil at home but reads The Hindu in English. WhatsApp she's comfortable with. Amazon she uses, but only for "big" things like a new pressure cooker. Quick commerce — she's tried it twice, gave up both times.
-
-**Picture this moment:** 9:15pm, Tuesday, mid-July. Heavy rain since evening. The transformer near her colony has blown — the watchman says restoration will be at least 4 hours. Her husband needs his BP monitor to charge (it's a digital one and the battery is dead). The candles from last Diwali are over. Her phone is at 38%.
-
-She opens Amazon Now. Stares at the search box.
-
-What does she even type? "Power cut things"? "Emergency stuff"? She tries "candles" — 30 brands appear, ₹40 to ₹450. She tries "power bank" — 80 options, ₹399 to ₹4,999. She adds two things, removes one, gets confused, and her husband asks if she's done. **By the 6th minute she's still in the search loop.**
-
-This — exactly this — is what we want to make disappear.
-
-With Turant, she taps one tile labeled *Power Cut*. Four seconds later she sees: candles (10 pack), a rechargeable LED bulb, a power bank, instant snacks for tonight, and cold drinks for the heat. Each line tells her *why* it's there. Total ₹1,418. Delivery in 14 minutes. One tap to order.
-
-### Aarav Kapoor, 21, Delhi
-
-Engineering student, third year, hostel. Final exam tomorrow morning. It's 2am. He's getting that scratchy throat feeling — the kind that tells you you'll be miserable in 6 hours if you don't do something now. He searches "cold remedies" on Blinkit. Vicks, Strepsils, Honitus, lemon, ginger, eucalyptus, immune boosters, vitamin C, ORS, paracetamol. **18 minutes pass. Cart is empty. Exam stress is worse.**
-
-What he actually needed was a "Quick Health → Cold & Cough" tile. One tap. ₹387. Done. Plus a clear note: *see a doctor if it doesn't improve in 48 hours*.
-
-### A few more situations our team thought through
-
-- Rohan, 28, Bangalore — sasural se 4 log suddenly aa gaye, dinner is now his problem
-- Sunita, 45, Lucknow — kal grih pravesh hai, aadhi saamagri reh gayi
-- Priya, 32, Patna — kid's birthday tomorrow, balloons aur cake ka decor nahi liya
-- Raj, 29, Pune — IMD has issued an orange alert, he wants to be ready
-
-Each of these is a *situation*, not a search query. That distinction is the entire product.
+That's the product. Everything below is us defending that sentence.
 
 ---
 
-## 3. The actual problem
+## 2. Who this is for
 
-We sat down and listed everything that goes wrong when someone tries to shop urgently in India today.
+We wrote the whole thing for two people. They're composites, but the situations are pulled from real app-store complaints and from watching our own families fumble through these apps.
 
-### Gap 1 — Too many choices, not enough time
+**Mrs. Lakshmi Iyer, 58, Chennai.** Retired schoolteacher, lives with her husband near Mylapore. Comfortable on WhatsApp, uses Amazon for "big" purchases like a pressure cooker, tried quick-commerce twice and gave up both times.
 
-This is the core one. Open Blinkit and search "snacks". You'll see 60+ products. The conversion research is pretty clear: human beings hit decision paralysis somewhere around 7 to 12 options. Quick commerce shows 5x that. And about 70% of quick-commerce spending in India is impulse/top-up — these aren't customers who want to browse. They want to be *finished*.
+It's 9:15pm on a Tuesday in July. Heavy rain. The transformer near her colony has blown and the watchman says four hours minimum. Her husband's digital BP monitor is dead and needs charging. The Diwali candles are finished. Her own phone is at 38%.
 
-The existing fixes — sort by popularity, filter by price, "Frequently bought together" — these are search-paradigm patches. They don't solve the real issue, which is that the customer doesn't want to be the chooser anymore.
+She opens the app and stares at the search box. What does she type — "power cut things"? "emergency stuff"? She tries "candles" and gets 30 brands from ₹40 to ₹450. She tries "power bank" and gets 80 options. By the sixth minute the lights are still off and her cart is still empty. Her husband asks if she's done.
 
-### Gap 2 — Vernacular barrier
+This exact moment is what Turant is built to delete. She types "light chali gayi, monsoon hai bahar" and four seconds later sees a Power Cut Kit — candles, a rechargeable LED bulb, a power bank, a couple of snacks for the night — each line telling her *why* it's there. Total at the bottom. One tap to order.
 
-Around 536 million Indians prefer non-English internet. About 9 out of every 10 *new* internet users in India come online in a regional language (Ken Research). And yet quick-commerce search bars are English-first. Voice input? Mostly missing in the urgent flows. Photo input? Same story.
+**Aarav Kapoor, 21, Delhi.** Engineering student, hostel, final exam tomorrow morning. It's 2am and his throat is starting to go — the scratchy feeling that means he'll be miserable by 8am if he doesn't act. He searches "cold remedies" and gets Vicks, Strepsils, Honitus, lemon, ginger, ten immune boosters. Eighteen minutes later his cart is empty and his exam stress is worse.
 
-Mrs. Iyer's daughter set up her Amazon account in English because that was the default. Mrs. Iyer would prefer Tamil. She makes do with English, but it costs her time and confidence every single session.
+What he needed was one tap that returns a small, sane cold-and-cough cart with a note to see a doctor if it doesn't clear in 48 hours. That's it.
 
-### Gap 3 — The apps don't understand "situations"
-
-"Light chali gayi" is not a product. It's a context. An app that requires the customer to translate that context into product names ("hmm... candles? power bank? what wattage? how many mAh?") is putting the cognitive load on the wrong person at exactly the wrong moment.
-
-When you ask Mrs. Iyer or Aarav what they actually need, they don't say products. They say situations. *"Mehmaan aa rahe hain"* or *"bukhar shuru ho raha hai"* or *"baarish bahut tez hai"*. The app should meet them there.
+If a feature didn't make one of these two moments easier, we cut it. We cut a few. More on that later.
 
 ---
 
-## 4. What we are building
+## 3. What the customer actually sees
 
-### The core idea
+The customer types or taps a situation. No category browsing, no filters, no comparison.
 
-A new mode inside Amazon Now called **Confident Mode** (the user-facing name is Turant). The customer expresses *a situation*. The system returns *one cart, with reasons*. Not a search results page. Not "top picks". One confident cart, 3 to 6 items, each one explained in a single line.
+Turant reads the message and makes one decision before it responds: *am I confident enough to act, or do I need to ask?* There is no third option. Either it returns a full cart, or it asks exactly one short question. We'll explain why the design is deliberately binary in the next section.
 
-### The three ways to talk to it
-
-**Tap a tile.** Home screen has 7 tiles — Power Cut, Guests Coming, Pooja, Exam Night, Monsoon, Baby Care, Quick Health. One tap. Cart appears in 3 to 5 seconds. This is the most reliable flow and the one we're betting the demo on.
-
-**Snap a photo.** Camera button. User takes a picture of an empty packet, an empty bottle, a medicine strip, anything. The AI identifies it and builds a reorder cart with the right companion items thrown in. (Example: photo of empty atta → 5kg atta + sugar + tea + biscuits, because past purchases show you usually buy these together.)
-
-**Just say it.** Microphone button. The user speaks in Hindi, Hinglish, Tamil, whatever's comfortable. The voice gets transcribed, the model parses the situation, the cart is assembled.
-
-We rank these three in build priority because voice is the riskiest in a live demo (latency can spike) and tile-taps are bulletproof. Photo is the visual wow moment if time permits.
-
-### What makes the output different
-
-Every item in the cart shows up with:
-- A short reason in plain language ("Lasts 6 hrs on a single charge")
-- A confidence indicator (small visual cue)
-- Where applicable, a safety note (Quick Health items always include the OTC-only disclaimer)
-
-We are not asking the customer to *trust* the AI. We are showing them *why* the AI picked each thing. That's the difference between this and a black-box "AI chose your cart" feature.
-
-### What we are explicitly NOT building
-
-We made a separate list of things our team committed to *not* doing — partly to protect the 48-hour timeline, partly to show judges we know where the regulatory and product boundaries are.
-
-We will not handle prescription medicines. Those need verified Rx upload, a pharmacy license, doctor verification — that's Amazon Pharmacy's territory, not a quick-commerce AI assistant.
-
-We will not suggest dosages. The model is instructed never to do this in any output.
-
-We will not diagnose or triage symptoms. The Quick Health tile is context-aware shopping, not medical advice.
-
-We will not integrate real payments, real delivery logistics, user accounts, or order history that persists beyond a session. These are all simulated for the demo because solving them properly is not what this hackathon is testing.
-
-A quick note on OTC products: for the Quick Health tile we only stock things that Blinkit, Zepto, and 1mg already deliver legally today — Vicks, Strepsils, OTC Crocin, ORS. Same playbook, no new regulatory exposure. Every health cart carries the disclaimer.
-
----
-
-## 5. How a user actually moves through it
-
-### Primary flow we are demoing — Mrs. Iyer's power cut
-
-1. She opens Amazon Now at 9:15pm
-2. At the top of the home screen there's a new banner: *"Need something urgently? Try Confident Mode"*
-3. She taps it
-4. The Confident Mode home shows 7 situation tiles
-5. She taps Power Cut
-6. Loading state: *"Thinking about what you'll need..."* (3–5 seconds)
-7. The Confident Cart slides in. 5 items, each with a one-line reason, total ₹1,418, ETA 14 minutes
-8. She reviews, taps Order Now
-9. Confirmation: *"Out for delivery in 14 minutes"*
-
-That's the whole story. Eight steps, under 30 seconds end to end if she's reading carefully.
-
-### Secondary flow we are demoing — Aarav's cold night
-
-He taps Quick Health → Cold & Cough. Cart appears with Vicks Vaporub, Strepsils, honey, ginger tea, OTC Crocin, and tissues. The safety note is right there: *"Not medical advice. See a doctor if symptoms persist beyond 48 hours."* He orders.
-
-### Stretch demo — the photo flow
-
-User taps the camera icon, snaps an empty Britannia packet on the counter. The AI identifies the product, suggests a reorder, and adds tea + sugar + milk because the user's past pattern shows these go together. One tap to checkout.
-
-### Edge cases we thought through
-
-- Photo is blurry or ambiguous → show top 2-3 "Did you mean…?" options, not a wrong guess
-- Quick Health tile is tapped → the safety disclaimer is always shown, no exceptions, hard-coded into the prompt
-- First-time user with no order history → seed a default mock history so the personalization still works
-- Lambda or Bedrock is slow → frontend shows the loading state for up to 10 seconds before falling back to cached responses
-
----
-
-## 6. Tech, in plain terms
-
-The whole stack is AWS-native, fully serverless, and runs on Free Tier. That last part isn't a side benefit — it's load-bearing for our scale story.
-
-### What each piece does
-
-| Layer | What we used | Why we picked it |
-|-------|--------------|-----------------|
-| Frontend | React + Vite, deployed via AWS Amplify | Fast deploy, free tier, easy mobile styling |
-| API layer | AWS API Gateway (REST) | First million calls per month are free |
-| Compute | AWS Lambda (Python 3.12) | Pay nothing when idle, scales automatically |
-| AI orchestration | Amazon Bedrock (Converse API) | Hackathon mandate, plus best multimodal support |
-| Reasoning model | Amazon Nova Lite | Fastest cheap model, ideal for cart generation |
-| Vision model | Claude Sonnet 4.5 | Best at messy real-world product photos |
-| Data | DynamoDB (on-demand) | Free tier 25 GB, no provisioning headache |
-| Image storage | S3 | Free tier 5 GB |
-| Voice (if time) | Transcribe + Polly | Hindi support is solid |
-| Dev tool | Kiro IDE | Hackathon mandate, also genuinely useful |
-
-### Why serverless matters for the scale story
-
-This is the slide we are most excited to present. Our stack today, with our 2 demo users, costs literally ₹0 — it sits inside Free Tier. The same stack tomorrow, serving 10 million Indian customers, would cost roughly ₹4.5 lakh per month. That's about ₹0.45 per cart generated. Against a ₹500–1500 cart, that's well under 0.1% in AI overhead.
-
-We don't have to redesign anything to scale. Lambda goes from a handful of concurrent executions to a few thousand. DynamoDB on-demand absorbs it. Bedrock auto-scales inference. We just pay more — which Amazon would, because they currently print money.
-
-### Tables we are using
+A confident response looks like this:
 
 ```
-Catalog          → product_id (PK), name, category, price_inr, image_url, tags[]
-SituationPlaybooks → situation_id (PK), title, core_items[], conditional_items{}, safety_note
-CartSessions     → session_id (PK), situation, items[], total, timestamp
+You typed:  "light chali gayi, monsoon hai bahar"
+
+Power Cut Kit                                    [CONFIDENT]
+─────────────────────────────────────────────────────────
+Eveready Candles (pack of 10)         ₹45    90%
+  Tonight's light, no electricity needed.
+
+⚠ Eveready Candles abhi out of stock hai —
+  Philips LED Night Light rakh diya, similar. Theek hai?
+  [ Haan, rakho ]   [ Nahi, hata do ]
+
+Wipro Emergency Rechargeable LED Bulb ₹399   88%
+  Lasts 6 hrs on a single charge.
+
+Mi Power Bank 10000mAh                ₹899   85%
+  Keeps your phone (and BP monitor) powered.
+
+TOTAL  ₹1,343  ·  delivery in ~14 min
+[ Order now ]    [ Share on WhatsApp ]
 ```
 
-### What the Bedrock prompt looks like (simplified)
-
-We give the model a system instruction, the situation playbook, the relevant slice of the catalog, and ask for strict JSON output. The system prompt hard-codes the safety rules — no dosages, no diagnoses, always include the disclaimer for Quick Health. That's not a soft instruction, it's a constraint enforced in the prompt and validated in the Lambda before the response goes out.
-
-### End-to-end timing
-
-User taps tile → API Gateway → Lambda → DynamoDB fetch → Bedrock call → JSON returned → cart rendered. Our target is under 5 seconds. In testing on Nova Lite we typically see 2–3 seconds.
+Every line earns its place with a one-line reason. The customer reads the cart, not a search results page.
 
 ---
 
-## 7. How we plan to actually build this in 48 hours
+## 4. The features, and why each one exists
 
-### Three priority tiers
+We ship eight. They aren't eight separate ideas bolted together — they're one decision engine with the supporting behaviors a real customer needs around it. Here's each, with the reasoning.
 
-**Must ship (the MVP):** Tap-a-Situation flow with 3 playbooks (Power Cut, Guests, Pooja). The cart UI. A mock checkout. If everything else breaks, this still demoes well.
+**4.1 Adaptive Situation Engine (binary).**
+The core. The model classifies the message into one of two modes. If it can honestly pick at least three relevant catalog items above a confidence of 0.6, it builds the cart. If it can't, it asks one clarifying question instead of guessing. The 0.6 floor is hard-coded, not left to the model's mood.
 
-**Should ship:** Photo flow with Claude vision. The other 4 playbooks including Quick Health.
+We originally had a third "best guess" middle mode and removed it on purpose. A half-confident cart is worse than no cart — it makes the customer do the very verification work we're trying to save them. The honest stances are "I know what you need" or "let me ask one thing." Nothing in between.
 
-**Nice to have:** Voice in Hindi or Tamil. Sharing a cart with a family member. Future-vision teaser features.
+**4.2 Explainable + personalized reasoning.**
+Every item carries a plain-language reason. When the customer has order history, their preferences surface — "Coca-Cola, your usual choice" or "you order this often" — with a small badge.
 
-### Who's doing what
+The important design rule here: *the model picks products, but Python owns the personalization.* A deterministic function checks each item name against the customer's favorite brands and actual order history, sets the flags, and rewrites the personalization phrase itself. This killed a real bug where the model would slap "your usual choice" onto the wrong product, or repeat the phrase twice in one line. The model is allowed to be creative; the code is what's allowed to be trusted.
 
-One of us (full-stack + ML) is owning backend, Bedrock prompts, the playbook content, Kiro setup, and the architecture diagram. The other is owning the React frontend, the cart UI, the demo video, and the PPT visuals. We sync every 6 hours for 15 minutes — what's blocked, what's next, nothing else.
+One rule we enforce strictly: history personalizes *which item gets picked*, never *what the situation is*. If a customer who often buys candles types "shaam ho gayi, kuch khane ka man," the title is "Evening Snacks," not "Power Cut Kit." The situation always comes from the current message.
 
-### Risks we already know about
+**4.3 Conversational refinement.**
+After the cart appears, the customer can talk to it — "Maggi hata do, kuch healthy do." The previous cart goes back into the request as context and the model swaps items instead of starting over. The title updates too ("Power Cut Kit" becomes "Power Cut Kit, Healthy Edition").
 
-| Risk | How we plan to handle it |
-|------|--------------------------|
-| Bedrock region access issues | Already tested in us-east-1; fallback ready |
-| Voice latency over 3 seconds | Drop live voice, use pre-recorded clip in the video |
-| Photo recognition fails on demo item | Test 10 items beforehand, hard-code top 5 |
-| Lambda cold start | Provisioned concurrency on the demo Lambda only |
-| Demo URL goes down at judging | Pre-recorded fallback video as backup |
-| Judge asks about medicine regulation | We have a prepared one-paragraph answer (Section 11) |
+**4.4 Smart substitution, driven by real stock.**
+This is not simulated. The catalog has a real `in_stock` field. When a cart contains something genuinely out of stock, Turant offers the closest *in-stock* alternative inline and asks the customer to confirm. The matching is deliberately strict: there's a hard food/non-food gate (a Rakhi set can never replace a sweet just because both are tagged "festival"), and the alternative has to share a *specific* tag — light for light, throat for throat — not a generic one like "beverage." If there's no genuinely close match, no swap is offered. Better to show nothing than to substitute nonsense.
 
-### Checkpoints
+**4.5 Confidence feedback loop.**
+Every item has an × button. Removing one records it as a negative signal, with the situation context, in DynamoDB. Next time that customer builds a cart, the removed item is *deterministically* stripped in Python — the prompt asks the model to avoid it, but the code guarantees it. It only comes back if the customer names it explicitly by a distinctive brand word ("Haldiram"), never by a generic category word ("namkeen"). Remove it once and it stays gone.
 
-- Hour 24: end-to-end MVP must work
-- Hour 36: feature freeze, no new scope
-- Hour 42: first demo rehearsal
-- Hour 46: final video recorded
-- Hour 48: submitted
+**4.6 Time-of-day routine anticipation.**
+The home screen reads the actual device clock and anticipates the household rhythm — morning pooja and breakfast, evening chai and snacks, late-night next-day essentials. This is real proactivity off the real clock, not fake telemetry. One tap sends the suggestion through the same engine, so the resulting cart is genuine, not canned.
 
----
+**4.7 Reorder and replenishment prediction.**
+Every order is timestamped per item. Each consumable has a typical cycle — milk every 4 days, coffee every 12, candles every 20. When 80% of the cycle has elapsed, Turant flags it: "You bought Eveready Candles about 22 days ago, likely run out by now. Reorder?" Durable goods (power banks, bulbs, batteries) are excluded by design so the customer is never nagged to rebuy a one-off. Tapping reorder builds the cart straight from the prediction, no model guess involved.
 
-## 8. What value gets created
-
-### For the customer
-
-| Today | With Turant |
-|-------|-------------|
-| 5 to 15 minutes spent deciding | Under 10 seconds |
-| 40+ products to evaluate | One confident cart |
-| Roughly 40% cart abandonment in urgent moments | Target under 10% |
-| English-first | Hindi, Tamil, and 5 more |
-| Reviews and ratings as trust signal (passive) | AI reasoning + safety notes (active) |
-
-### For Amazon
-
-Higher conversion in urgent-need moments — that's the fastest-growing slice of the category. Higher AOV through smart bundling — a power-cut cart at ₹1,418 is roughly 4x a typical single-search order. A defensible moat in Tier 2 and Tier 3 city expansion because the vernacular + situation-first design is genuinely better for non-English users. And Andy Jassy said on the Q1 2026 earnings call that Prime members triple their shopping frequency on Amazon Now — Confident Mode is engineered to accelerate that engagement.
+**4.8 WhatsApp share.**
+One tap after the cart is built opens WhatsApp with a clean summary — items, prices, total, ETA. In an Indian household the person opening the app often isn't the person who approves the spend. This lets the cart go to whoever decides before anything is ordered.
 
 ---
 
-## 9. Where this goes after the hackathon
+## 5. Code > Model: how we keep an AI from embarrassing us
 
-We weren't able to build all of this in 48 hours, obviously. But here's the roadmap we'd push for if Amazon picked this up.
+This is the part we're proudest of, and it's a direct answer to a question Amazon asked in the briefing: *how would you prevent incorrect automations from creating a poor customer experience?*
 
-### First three months
-- Expand from 7 to 50+ situation playbooks (festival-specific, regional, seasonal)
-- Add personalization based on which tiles a user actually taps
-- Multi-language: Tamil, Telugu, Bengali, Marathi rollout
+Our answer is that the model is never the last word. After it returns its JSON, a chain of deterministic Python guards runs before anything reaches the customer:
 
-### Three to six months
-- **Festival Auto-Mode** — system reads the calendar, proactively suggests a Diwali kit three days before Diwali
-- **Family Group Carts** — mom-in-law can approve the cart from her phone before checkout
-- **Weather-triggered** — "Heavy rain forecast tonight — want a monsoon kit ready?"
-- **Power-grid integration** — state electricity board data feeds proactive notifications
+- **Catalog enrichment** overwrites every item's name, price, and ETA from the real catalog by product ID, and drops anything the model invented. Prices and products cannot be hallucinated — the catalog is the single source of truth.
+- **Medical gating** lets OTC items (Crocin, Vicks, ORS) appear *only* when the current message mentions a health symptom, even if they're a favorite. "light chali gayi" will never surface Crocin; "bukhar hai, throat kharab" will.
+- **Disliked-item stripping** removes anything the customer previously rejected.
+- **Personalization correction** fixes or removes any wrong or duplicated personalization wording the model wrote.
+- **Safety-note enforcement** allows only the exact OTC disclaimer string or nothing — the model can't invent its own warnings.
+- **Delivery-note enforcement** fires a delivery warning only when an item's real ETA exceeds 20 minutes.
 
-### Six to twelve months
-- **Alexa integration** — "Alexa, light chali gayi" and the cart is on your phone by the time you find it
-- **Pantry photo** — picture of your kitchen shelf → suggested weekly cart
-- **Hyperlocal** — outage detected in an area, Confident Mode is offered to that whole neighborhood
+All six are tested. Our internal feature test run is 33 of 33 passing, including specific cases like "model tried to add a non-standard safety note → stripped" and "Gangajal has a 22-minute ETA → delivery note correctly set."
 
-### Beyond a year
-- Cross-category situations like "wedding in family" — groceries + gifts + travel essentials, coordinated across Amazon
-- B2B version for small kirana shops to use Confident Mode for restocking decisions
-- Open situations API so other Amazon services (Fresh, Pharmacy with proper Rx infra, Business) can plug in
-- Eventually, with proper regulatory infrastructure, prescription medicines via Amazon Pharmacy. Worth noting we view this as a v3+ thing, not v1
+The point we'll make to a judge: an LLM in a shopping flow that can hallucinate a price or push a medicine is a liability. We treat the model as a creative drafting layer wrapped in code that is allowed to say no.
 
 ---
 
-## 10. How we're measuring our own success
+## 6. Architecture
 
-Mapping back to the four judging criteria, here's where each is addressed:
+```
+React + Vite  ──HTTPS──▶  API Gateway  ──invoke──▶  Lambda (Python 3.12)
+   frontend                REST proxy                parse_and_generate
+                                                          │
+                          ┌───────────────────────────────┼─────────────┐
+                          ▼                               ▼             ▼
+                    DynamoDB (on-demand)          Amazon Bedrock
+                    Catalog (63 products)         Nova Lite
+                    UserPreferences               (Converse API)
+                    SituationPlaybooks
+                    CartSessions
+```
 
-**Customer obsession.** Mrs. Iyer is real — not in name, but the situation is built from actual quick-commerce reviews, app store complaints, and behavior our team observed in our own families. Aarav represents the hostel demographic. The pain quotes in Section 3 are paraphrased from actual user reviews we read.
+One Lambda handles everything; an `action` field in the request routes the behavior (`generate`, `substitute`, `record_order`, `record_removal`, `get_profile`). The model's output always passes through the guard chain in Section 5 before it returns.
 
-**Quality of implementation.** End-to-end working flow on real Bedrock, not stubs. Demo runs on the same architecture that would scale. We're committing to a working prototype, not a mockup.
+**Why serverless, and why no EC2.** Quick-commerce traffic is bursty in a very specific way — a power cut hits one neighborhood and 500 carts get generated in two minutes, then nothing for an hour. Lambda absorbs both the spike and the idle automatically and costs nothing when no one's shopping. DynamoDB on-demand scales the same way with zero provisioning. An always-on EC2 fleet would mean paying for capacity that sits unused most of the day and still risk being underprovisioned during a localized surge.
 
-**Scalability and architecture.** Serverless, Free Tier today, ₹0.45 per cart at 1M users. The architecture diagram and the cost table tell the whole story on one slide.
+**Stack:** React 18 + Vite on the front; API Gateway REST; Lambda on Python 3.12; Amazon Nova Lite via Bedrock (2–3s latency, cheapest frontier model that does the job); DynamoDB on-demand. Built in Kiro, per the hackathon mandate.
 
-**Future vision.** Four phases above, each with concrete features. The festival auto-mode and family group carts are the ones we'd be most excited to ship next.
-
-### Our demo video plan
-
-Around 2 minutes 45 seconds total. First 15 seconds: Mrs. Iyer's power-cut moment as a hook. Next 30 seconds: live demo, tile-tap, cart appears. Next 60 seconds: architecture + scale story. Final 30 seconds: future vision. We're using a pre-recorded fallback in case the live demo URL flakes during judging.
-
-### PPT structure
-
-Eight slides, no more. Problem framing (with Mrs. Iyer's story). Solution with annotated screenshots. Architecture diagram. Scale and cost slide. Roadmap. Two judging-criteria mapping slides. A closing "what we'd build next" slide.
-
----
-
-## 11. A note on regulation
-
-This came up a lot during planning so we want to put it on record.
-
-We're aware that medicine delivery is a regulated category in India. Our scope is deliberately limited to OTC products that quick-commerce apps in India already deliver today — Vicks Vaporub, Strepsils, OTC Crocin, ORS sachets. Things you can already buy at any kirana store without a prescription. We chose Power Cut as our primary demo specifically so the judging conversation centers on AI quality, not on regulatory questions about pharmacy licensing.
-
-If a judge asks about prescription medicines, here's our prepared answer: *"Prescription handling requires verified prescription upload, registered pharmacist verification, and pharmacy licensing — that's Amazon Pharmacy's existing infrastructure. Building it inside a quick-commerce AI assistant would either duplicate that or compromise on it. We've kept Turant scoped to OTC for v1, and the v3+ roadmap shows how prescription integration would happen through Amazon Pharmacy, not around it."*
-
-We want the regulatory caution to read as maturity, not as a gap.
+**Demo safety net.** The frontend ships with a complete mock backend that mirrors the Lambda. If the live API is ever unreachable during judging, the mock takes over silently and every response is tagged as live, mock, or fallback. The demo cannot hard-fail in front of a judge.
 
 ---
 
-## 12. The motto we kept coming back to
+## 7. Scale and cost
 
-> *Fall in love with the problem, not the technology.*
+The architecture that runs the demo is the architecture that scales — there's no "we'd rebuild it for production" asterisk.
 
-Our team's working rule for the 48 hours: when there's any decision to make — a feature to cut, a tech tradeoff, an animation to add, anything — we ask one question.
+At a million users, the cost works out to roughly ₹0.45 per generated cart, dominated by the Bedrock Nova Lite call. Lambda and DynamoDB on-demand stay inside or near Free Tier at hackathon volume and scale linearly with usage rather than with provisioned capacity. The whole cost story fits on one slide, which is the point — it means scale was a design input, not an afterthought.
 
-**"Does this make Mrs. Iyer's 9pm power-cut moment easier?"**
+---
 
-If yes, build it. If no, drop it, even if it's clever.
+## 8. Non-functional requirements
 
-That's the whole compass.
+The briefing explicitly raised privacy and bad-automation prevention, so we're putting our answers on record rather than waiting to be asked.
+
+**Privacy.** The only personal data we store is per-user order history, favorite brands, and removal signals — all keyed to a user ID, all used solely to personalize that same user's carts. Personalization is opt-in: anonymous mode works fully and simply skips the personalization layer. Nothing is shared across users, and no third-party product images or trackers are pulled into the UI (each item shows a clean category icon, partly for this reason and partly because stock-photo services returned broken images).
+
+**Preventing bad automations.** Covered in depth in Section 5 — the six deterministic guards exist precisely so an automated cart can't surface a hallucinated price, a wrong medicine, or an invented warning.
+
+**Reliability.** The mock-fallback design (Section 6) means a backend outage degrades to a working offline demo rather than an error screen.
+
+---
+
+## 9. What we deliberately did not build
+
+We think the cuts say as much about the product as the features.
+
+- **A "best guess" middle mode** — removed. A half-confident cart undermines the entire thesis.
+- **Cart Battle (budget vs premium side-by-side)** — removed from the UI. It added a comparison decision, which is exactly the friction we're trying to eliminate. The backend code is inert but left in place.
+- **Neighborhood Pulse** — removed entirely. It relied on fake telemetry, and we'd rather ship genuine proactivity (the clock and real reorder data) than fake a signal.
+- **Photo and voice input** — roadmap, not demo. The architecture supports Bedrock vision and Transcribe/Polly, but a shaky live demo is worse than a clean typed one.
+- **Prescription medicines** — OTC only. Prescription handling needs verified upload, a registered pharmacist, and pharmacy licensing — that's Amazon Pharmacy's existing infrastructure. Building it inside a quick-commerce assistant would either duplicate or compromise it. We scoped Turant to OTC for v1 and put Rx integration in the v3+ roadmap, routed *through* Amazon Pharmacy, not around it. We'd rather the judging conversation be about AI quality than about pharmacy law, which is why Power Cut, not health, is our headline demo.
+
+---
+
+## 10. Where this goes next
+
+If Amazon picked this up, here's the order we'd build in.
+
+**First three months.** Expand from a handful of situations to 50+ playbooks (festival, regional, seasonal). Add personalization based on which suggestions a customer actually taps. Roll out Tamil, Telugu, Bengali, and Marathi.
+
+**Three to six months.** Festival auto-mode (the system reads the calendar and offers a Diwali kit three days out). Family group carts (the household decision-maker approves from their own phone before checkout). Weather-triggered prompts ("heavy rain forecast tonight — want a monsoon kit ready?"). State electricity-board data feeding proactive power-cut notifications.
+
+**Six to twelve months.** Alexa ("Alexa, light chali gayi" and the cart is on your phone before you find the candles). Pantry photo (a picture of your shelf becomes a weekly cart). Hyperlocal — an outage detected in an area, Confident Mode offered to that whole neighborhood.
+
+**Beyond a year.** Cross-category situations like "wedding in the family" — groceries, gifts, and travel essentials coordinated across Amazon. A B2B version for kirana shops to use Confident Mode for restocking. An open situations API so Fresh, Business, and (with proper Rx infrastructure) Pharmacy can plug in.
+
+---
+
+## 11. Why Amazon should care
+
+Beyond the customer win, the business case is straightforward. A situation cart bundles intelligently, so a power-cut order at ₹1,300+ is several times a typical single-item search order — higher basket value without any upsell pressure. The vernacular, situation-first design is a genuine moat in Tier 2 and Tier 3 expansion, where the search-box model serves non-English customers worst. And it leans directly into the Amazon Now engagement flywheel: the easier the decision, the more often people come back.
+
+*(Note for the team: if we cite any specific engagement statistic or executive quote in the deck, verify the exact figure and source first. A misquoted number in front of Amazon judges costs more than leaving it out.)*
+
+---
+
+## 12. How we map to the four judging criteria
+
+**Customer obsession.** Mrs. Iyer and Aarav are built from real reviews and observed behavior, and every feature traces back to one of their moments. The cuts in Section 9 are the customer thesis enforced under pressure.
+
+**Quality of implementation.** A working end-to-end prototype on real Bedrock, not stubs, with a 33/33 internal test pass and a mock fallback so the demo can't fail live. The deterministic guard chain is the standout.
+
+**Scalability and architecture.** Serverless by design, the demo stack is the production stack, ₹0.45 per cart at a million users, with a clear reason for every infrastructure choice.
+
+**Future vision.** Four phases of concrete features, each tied back to a customer outcome rather than a technology for its own sake.
+
+---
+
+## 13. The compass
+
+Every time there was a decision to make — a feature to keep or cut, a tradeoff, an animation — we asked one question:
+
+**Does this make Mrs. Iyer's 9pm power-cut moment easier?**
+
+If yes, build it. If no, drop it, however clever it looked. That's what "start with the customer" meant for us in practice, and it's why the product is smaller and sharper than it could have been.
