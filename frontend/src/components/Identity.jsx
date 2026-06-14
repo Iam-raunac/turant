@@ -3,6 +3,14 @@ import { useState } from "react";
 // Dynamic identity — no hardcoded users. Sign in with any name; we generate a
 // stable user_id and persist it in localStorage so learning carries across
 // sessions. "Guest" means anonymous (no personalization).
+//
+// Two demo personas map to the SEEDED backend profiles (favorite brands +
+// backdated order history) so the personalization and reorder-prediction
+// features are demoable instantly.
+const DEMO_PERSONAS = [
+  { id: "demo_user_1", name: "Mrs. Iyer", sub: "Chennai · senior household" },
+  { id: "demo_user_2", name: "Aarav", sub: "Delhi · hostel student" },
+];
 
 export default function Identity({ user, onSignIn, onSignOut }) {
   const [editing, setEditing] = useState(false);
@@ -54,6 +62,25 @@ export default function Identity({ user, onSignIn, onSignOut }) {
         <button className="signin-btn" onClick={submit} disabled={!name.trim()}>
           Sign in
         </button>
+      </div>
+
+      <div className="identity-demo">
+        <span className="identity-demo-label">Or try a demo profile:</span>
+        <div className="identity-demo-row">
+          {DEMO_PERSONAS.map((p) => (
+            <button
+              key={p.id}
+              className="demo-persona-btn"
+              onClick={() => {
+                onSignIn(p.name, p.id);
+                setEditing(false);
+              }}
+            >
+              <span className="demo-persona-name">{p.name}</span>
+              <span className="demo-persona-sub">{p.sub}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -1,42 +1,41 @@
 """
-Turant — parse_and_generate Lambda function (v7 FINAL)
+Turant — parse_and_generate Lambda function (v8)
 
-Single engine implementing all 4 locked features:
+Single engine implementing the core features:
 
 Feature 1 — Adaptive Situation Engine (3-tier response)
    confident / best_guess / clarifying_question modes.
 
 Feature 2 — Explainable + Personalized Reasoning
    Per-item "reason" field; brand preference acknowledgement when user_id
-   is supplied (e.g. "Maggi — your usual choice").
+   is supplied (e.g. "Maggi — your usual choice"). Personalization flags are
+   set deterministically in Python, never trusted to the model.
 
-Feature 3 — Conversational Refinement
-   Pass `previous_cart` to refine an existing cart instead of regenerating.
+Feature 3 — Smart Substitution
+   action "substitute" returns the best same-category swap for an
+   out-of-stock product.
 
-Feature 4 — Cart Battle (Budget vs Premium)
-   Pass `mode: "battle"` + a budget number to receive TWO complete carts
-   for occasion-style decisions (e.g. "movie night for 4, budget 500").
+Feature 4 — Confidence Feedback Loop
+   action "record_removal" stores removed items as negative signals so future
+   carts avoid them (avoid-list).
+
+Proactive A — Time-of-day routine anticipation (frontend, clock-based).
+
+Proactive B — Reorder / Replenishment Prediction
+   compute_reorder_suggestions() predicts which consumables are running low
+   from the user's OWN past-order timestamps. Surfaced via get_profile.
+
+NOTE: Cart Battle (mode="battle") remains in the backend as inert/dead code
+   but is no longer surfaced in the UI — the product thesis is ONE confident
+   cart, not a budget-vs-premium decision.
 
 Input contract:
 {
-  "user_text": "...",                  // required
+  "user_text": "...",                  // required for generate
   "user_id": "demo_user_1",            // optional — personalization
   "previous_cart": { ... },            // optional — refinement
-  "mode": "single" | "battle",         // optional — default "single"
-  "budget_inr": 500                    // optional — only used when mode=battle
-}
-
-Output (mode = single, default):
-  Standard single-cart JSON (see schema below).
-
-Output (mode = battle):
-{
-  "response_type": "battle",
-  "situation_understood": "...",
-  "carts": [
-    { ...budget cart with same shape as single response... },
-    { ...premium cart with same shape as single response... }
-  ]
+  "action": "generate" | "record_order" | "record_removal" |
+            "substitute" | "get_profile"
 }
 """
 
@@ -59,6 +58,110 @@ STANDARD_SAFETY_NOTE = (
     "48 hours or worsen. We only suggest OTC products available without a "
     "prescription."
 )
+
+# ---------------------------------------------------------------------------
+# Replenishment cycles (Proactive Feature: Reorder Prediction)
+#
+# How many days a typical household takes to run out of a consumable. Used to
+# predict when the user is likely to need a refill, based ONLY on their own
+# past orders — no external data. Durable goods (power banks, bulbs, batteries
+# for one-off use, stationery) are intentionally excluded so we never nag the
+# user to "reorder" something they bought once.
+# ---------------------------------------------------------------------------
+CATEGORY_REPLENISH_DAYS = {
+    "staples": 14,
+    "health": 30,
+    "pooja": 20,
+    "monsoon": 30,
+}
+
+# Per-product overrides — more accurate than the category default.
+PRODUCT_REPLENISH_DAYS = {
+    "P001": 20,   # Candles (pack of 10)
+    "P004": 12,   # Maggi Atta Noodles (pack of 4)
+    "P005": 10,   # Cold Drinks Pack
+    "P064": 4,    # Milk 1L
+    "P062": 18,   # Tea Powder 250g
+    "P061": 30,   # Sugar 1kg
+    "P060": 30,   # Atta 5kg
+    "P063": 12,   # Britannia Biscuits
+    "P084": 30,   # Mosquito Repellent Refill
+    "P040": 12,   # Instant Coffee Sachets (10)
+}
+
+# Surface a reorder once the consumable is at least this fraction through its
+# typical life (e.g. 0.8 → flag when ~80% of the cycle has elapsed).
+REORDER_THRESHOLD = 0.8
+SECONDS_PER_DAY = 86400
+
+
+def replenish_days_for(product):
+    """Return the replenishment cycle in days for a catalog product, or None
+    if the product is a durable good that should never be auto-reordered."""
+    if not product:
+        return None
+    pid = product.get("product_id")
+    if pid in PRODUCT_REPLENISH_DAYS:
+        return PRODUCT_REPLENISH_DAYS[pid]
+    return CATEGORY_REPLENISH_DAYS.get(product.get("category"))
+
+
+def compute_reorder_suggestions(user_profile, catalog, now_ts=None, limit=3):
+    """Proactive Feature: Reorder / Replenishment Prediction.
+
+    Looks at the timestamps of the user's OWN past orders and predicts which
+    consumables are likely running low now. Deterministic, data-driven, no
+    external dependency — purely "you bought X about N days ago, it's due".
+    """
+    if not user_profile:
+        return []
+
+    last_ordered = user_profile.get("item_last_ordered") or {}
+    item_names = user_profile.get("item_names") or {}
+    if not last_ordered:
+        return []
+
+    now_ts = now_ts or int(time.time())
+    catalog_by_id = {p["product_id"]: p for p in catalog}
+
+    suggestions = []
+    for pid, ts in last_ordered.items():
+        product = catalog_by_id.get(pid)
+        cycle = replenish_days_for(product)
+        if not cycle:
+            continue
+        days_since = (now_ts - int(ts)) / SECONDS_PER_DAY
+        if days_since < cycle * REORDER_THRESHOLD:
+            continue  # still well-stocked
+
+        name = item_names.get(pid) or (product or {}).get("name", pid)
+        overdue = days_since - cycle
+        if overdue >= 0:
+            reason = (
+                f"You bought {name} about {int(round(days_since))} days ago — "
+                f"it's likely run out by now. Reorder?"
+            )
+        else:
+            reason = (
+                f"You bought {name} about {int(round(days_since))} days ago — "
+                f"it usually lasts ~{cycle} days, so you're probably running low."
+            )
+
+        suggestions.append({
+            "product_id": pid,
+            "name": name,
+            "days_since": int(round(days_since)),
+            "cycle_days": cycle,
+            "price_inr": (product or {}).get("price_inr", 0),
+            "eta_min": (product or {}).get("eta_min", 15),
+            "reason": reason,
+            # how overdue it is, used for ranking (higher = more urgent)
+            "urgency": round(days_since / cycle, 2),
+        })
+
+    # Most-overdue first.
+    suggestions.sort(key=lambda s: s["urgency"], reverse=True)
+    return suggestions[:limit]
 
 
 # ---------------------------------------------------------------------------
@@ -95,16 +198,19 @@ def record_order(user_id, items, name=None):
     item_counts = existing.get("item_counts") or {}
     item_names = existing.get("item_names") or {}
     category_counts = existing.get("category_counts") or {}
+    item_last_ordered = existing.get("item_last_ordered") or {}
 
     # category lookup from catalog
     catalog_by_id = {p["product_id"]: p for p in get_full_catalog()}
 
+    now_ts = int(time.time())
     for it in items:
         pid = it.get("product_id") or it.get("name")
         if not pid:
             continue
         item_counts[pid] = int(item_counts.get(pid, 0)) + 1
         item_names[pid] = it.get("name", pid)
+        item_last_ordered[pid] = now_ts  # for reorder prediction
         category = (catalog_by_id.get(pid) or {}).get("category", "general")
         category_counts[category] = int(category_counts.get(category, 0)) + 1
 
@@ -112,9 +218,10 @@ def record_order(user_id, items, name=None):
         "user_id": user_id,
         "name": name or existing.get("name") or user_id,
         "order_count": int(existing.get("order_count", 0)) + 1,
-        "last_order_ts": int(time.time()),
+        "last_order_ts": now_ts,
         "item_counts": item_counts,
         "item_names": item_names,
+        "item_last_ordered": item_last_ordered,
         "category_counts": category_counts,
     }
     # preserve any seeded demographic fields
@@ -741,7 +848,12 @@ def lambda_handler(event, context):
             profile = get_user_preferences(user_id)
             if not profile:
                 return _response(200, {"exists": False, "user_id": user_id})
-            return _response(200, {"exists": True, **_json_safe(profile)})
+            reorders = compute_reorder_suggestions(profile, get_full_catalog())
+            return _response(200, {
+                "exists": True,
+                **_json_safe(profile),
+                "reorder_suggestions": _json_safe(reorders),
+            })
 
         # ----- Default: generate a cart -----
         user_text = body.get("user_text", "").strip()

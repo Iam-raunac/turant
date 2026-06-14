@@ -76,25 +76,7 @@ After the cart appears, the user can talk back to it:
 
 The previous cart goes back in the request as context. The model swaps items rather than starting over. The title updates too — *Power Cut Kit → Power Cut Kit (Healthy Edition)*. Everything else stays.
 
-### 4. Cart Battle — Budget vs Premium
-
-For occasion-shopping where the spend level is the actual question:
-
-> *"movie night for 4, budget 500"*
-
-Two carts come back side by side — a ₹500 essentials cart and a ~₹850 upgraded cart with dessert, ice, and better snacks. Personalization applies to both.
-
-### 5. Neighborhood Pulse
-
-A proactive banner on the home screen. When demand in your area spikes for a specific situation — *"18 people in your area ordered Pooja samagri. Festival prep is peaking around you."* — one tap builds that cart immediately.
-
-No new tables needed. In production this would run off CartSessions aggregation. Turant shows what proactive commerce looks like when the app comes to you instead of waiting.
-
-### 6. WhatsApp Share
-
-Cart decisions in Indian households aren't solo. After a cart is generated, one tap opens WhatsApp with a pre-formatted summary — items, prices, total, ETA — plus a link to the cart. The other person can look, approve, or suggest changes before anything is ordered.
-
-### 7. Smart Substitution
+### 4. Smart Substitution
 
 If an item in a generated cart is out of stock, Turant doesn't just say "unavailable, remove?" It finds the closest substitute by tag overlap → same category → nearest price, and shows it inline:
 
@@ -102,11 +84,27 @@ If an item in a generated cart is out of stock, Turant doesn't just say "unavail
 
 One tap to approve, one tap to remove. The flow doesn't break.
 
-### 8. Confidence Feedback Loop
+### 5. Confidence Feedback Loop
 
 Every cart item has a × button. When a user removes an item, that removal is logged as a negative signal against that product in that situation context. The next time the same user builds a cart, removed items are filtered out of consideration unless they explicitly ask for them.
 
 The loop is visible in the demo — order a cart, remove Gulab Jamun, build a guests cart again, and Gulab Jamun won't appear.
+
+### 6. Proactive — Time-of-day Routine Anticipation
+
+The home screen anticipates the household rhythm using only the real device clock — no fake telemetry. Morning surfaces pooja + breakfast essentials, evening suggests *chai & snacks*, late night sets up next-day milk and bread. One tap runs the suggestion through the same Adaptive Situation Engine, so the cart is real, not canned.
+
+### 7. Proactive — Reorder / Replenishment Prediction
+
+Turant timestamps every order and knows the typical replenishment cycle for each consumable. When something the user buys regularly is likely running low, it offers a one-tap reorder built entirely from their own data:
+
+> *"You bought Candles about 22 days ago — it's likely run out by now. Reorder?"*
+
+Durable goods (power banks, bulbs, batteries) are deliberately excluded so the user is never nagged to "reorder" a one-off purchase. Tapping reorder builds a cart from the prediction directly — no LLM guess involved. Sign in as a demo profile (Mrs. Iyer / Aarav) to see it fire on their seeded history.
+
+### 8. WhatsApp Share
+
+Cart decisions in Indian households aren't solo. After a cart is generated, one tap opens WhatsApp with a pre-formatted summary — items, prices, total, ETA — plus a link to the cart. The other person can look, approve, or suggest changes before anything is ordered.
 
 ---
 
@@ -132,7 +130,7 @@ The loop is visible in the demo — order a cart, remove Gulab Jamun, build a gu
                                      └─────────────────┘
 ```
 
-One Lambda function handles everything — `parse_and_generate`. The request body's `mode` field (single / battle) and `action` field (substitute / record_removal) route to the right behavior. This keeps cold-start cost minimal and the whole backend auditable in one file.
+One Lambda function handles everything — `parse_and_generate`. The request body's `action` field (`generate` / `substitute` / `record_order` / `record_removal` / `get_profile`) routes to the right behavior. This keeps cold-start cost minimal and the whole backend auditable in one file.
 
 The model's JSON output goes through a Python validation layer before it ever reaches the frontend. Personalization flags, safety-note enforcement, delivery-note math — none of these are trusted to the model. The code sets them deterministically.
 
@@ -191,9 +189,9 @@ turant/
 │       ├── catalog.js               findSubstitute() logic
 │       └── components/
 │           ├── Cart.jsx             cart display + Share button + × removal
-│           ├── BattleCarts.jsx      budget vs premium side-by-side
 │           ├── RefineBar.jsx        conversational refinement input
-│           ├── NeighborhoodPulse.jsx proactive demand banner
+│           ├── RoutineSuggestion.jsx   time-of-day proactive suggestion
+│           ├── ReorderSuggestion.jsx   replenishment-prediction reorder card
 │           └── SmartSubstitution.jsx out-of-stock swap prompt
 ├── docs/
 │   ├── PRD-Turant.md               full product requirements
@@ -273,10 +271,10 @@ curl -X POST "$(cat api_url.txt)" \
   -H "Content-Type: application/json" \
   -d '{"user_text": "mehmaan aa rahe hain", "user_id": "demo_user_1"}'
 
-# Cart Battle mode
+# Fetch a profile (includes reorder suggestions)
 curl -X POST "$(cat api_url.txt)" \
   -H "Content-Type: application/json" \
-  -d '{"user_text": "movie night for 4", "mode": "battle", "budget_inr": 500}'
+  -d '{"action": "get_profile", "user_id": "demo_user_1"}'
 ```
 
 ### Step 5 — Run the frontend
@@ -295,7 +293,7 @@ npm run dev
 
 Open `http://localhost:5173`. Type any situation in any language and tap **Build my cart**.
 
-To see personalization in action: click "Switch user" → select Amrit → build a guests cart → notice the ✨ badges and "your usual choice" reasons.
+To see personalization in action: click "Or try a demo profile" → select **Mrs. Iyer** → build a guests cart → notice the ✨ badges and "your usual choice" reasons. The home screen also shows her reorder suggestions (e.g. candles bought ~22 days ago).
 
 ---
 
@@ -310,9 +308,7 @@ To see personalization in action: click "Switch user" → select Amrit → build
   "user_text": "light chali gayi, monsoon hai bahar",
   "user_id": "demo_user_1",
   "previous_cart": null,
-  "mode": "single",
-  "budget_inr": null,
-  "action": null
+  "action": "generate"
 }
 ```
 
@@ -321,9 +317,7 @@ To see personalization in action: click "Switch user" → select Amrit → build
 | `user_text` | Yes | Any language, ≤500 chars |
 | `user_id` | No | `demo_user_1` or `demo_user_2` for personalized carts |
 | `previous_cart` | No | Pass previous response object to refine instead of rebuild |
-| `mode` | No | `"single"` (default) or `"battle"` |
-| `budget_inr` | No | Budget target for battle mode |
-| `action` | No | `"substitute"` or `"record_removal"` for feedback features |
+| `action` | No | `"generate"` (default), `"substitute"`, `"record_order"`, `"record_removal"`, `"get_profile"` |
 
 **Single mode response:**
 
@@ -351,7 +345,7 @@ To see personalization in action: click "Switch user" → select Amrit → build
 }
 ```
 
-**Battle mode response:** same shape but `carts` is an array of two objects tagged `tier: "budget"` and `tier: "premium"`.
+**`get_profile` response:** includes the stored profile plus a `reorder_suggestions` array — items predicted to be running low, computed from the user's own order timestamps and per-product replenishment cycles.
 
 ---
 

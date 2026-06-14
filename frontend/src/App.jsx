@@ -5,15 +5,14 @@ import HeroInput from "./components/HeroInput.jsx";
 import SampleChips from "./components/SampleChips.jsx";
 import Identity from "./components/Identity.jsx";
 import LearnedStrip from "./components/LearnedStrip.jsx";
-import ModeToggle from "./components/ModeToggle.jsx";
+import RoutineSuggestion from "./components/RoutineSuggestion.jsx";
+import ReorderSuggestion from "./components/ReorderSuggestion.jsx";
 import Loading from "./components/Loading.jsx";
 import Cart from "./components/Cart.jsx";
-import BattleCarts from "./components/BattleCarts.jsx";
 import ClarifyingQuestion from "./components/ClarifyingQuestion.jsx";
 import RefineBar from "./components/RefineBar.jsx";
 import OrderConfirmation from "./components/OrderConfirmation.jsx";
 import ErrorBanner from "./components/ErrorBanner.jsx";
-import NeighborhoodPulse from "./components/NeighborhoodPulse.jsx";
 import SmartSubstitution from "./components/SmartSubstitution.jsx";
 
 const SAMPLE_PROMPTS = [
@@ -44,8 +43,6 @@ export default function App() {
   const [profile, setProfile] = useState(null);
 
   const [userText, setUserText] = useState("");
-  const [mode, setMode] = useState("single");
-  const [budget, setBudget] = useState(500);
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -70,13 +67,18 @@ export default function App() {
     refreshProfile(user.id);
   }, [user.id, refreshProfile]);
 
-  function signIn(name) {
+  function signIn(name, fixedId) {
     const existing = loadIdentity();
-    // keep same id if signing in with the same name (so learning persists)
-    const id =
-      existing.name.toLowerCase() === name.toLowerCase() && existing.id
-        ? existing.id
-        : slugify(name);
+    // Demo personas pass a fixed id (e.g. demo_user_1) so they map to the
+    // seeded profile. Otherwise generate a stable id and keep it across
+    // sessions for the same name so learning persists.
+    let id = fixedId;
+    if (!id) {
+      id =
+        existing.name.toLowerCase() === name.toLowerCase() && existing.id
+          ? existing.id
+          : slugify(name);
+    }
     const next = { id, name };
     localStorage.setItem(IDENTITY_KEY, JSON.stringify(next));
     setUser(next);
@@ -88,7 +90,7 @@ export default function App() {
     setProfile(null);
   }
 
-  async function submit(textOverride, modeOverride) {
+  async function submit(textOverride) {
     const text = (textOverride ?? userText).trim();
     if (!text) return;
 
@@ -101,11 +103,6 @@ export default function App() {
 
     const payload = { user_text: text };
     if (user.id) payload.user_id = user.id;
-    const useMode = modeOverride ?? mode;
-    if (useMode === "battle") {
-      payload.mode = "battle";
-      payload.budget_inr = Number(budget) || 500;
-    }
 
     try {
       setResult(await generateCart(payload));
@@ -117,7 +114,7 @@ export default function App() {
   }
 
   async function refine(refinementText) {
-    if (!result || result.response_type === "battle") return;
+    if (!result) return;
     setLoading(true);
     setError(null);
     const payload = { user_text: refinementText, previous_cart: result };
@@ -129,6 +126,37 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // Proactive Feature B — build a cart directly from the (data-driven) reorder
+  // suggestions. No LLM call: these come from the user's real order history.
+  function reorderItems(suggestions) {
+    if (!suggestions?.length) return;
+    const items = suggestions.map((s) => ({
+      product_id: s.product_id,
+      name: s.name,
+      reason: s.reason,
+      confidence: 0.9,
+      price_inr: s.price_inr,
+      eta_min: s.eta_min,
+      personalized: true,
+    }));
+    setError(null);
+    setOrdered(null);
+    setFeedbackNote(null);
+    setResult({
+      response_type: "confident",
+      cart_title: "Reorder — running low",
+      situation_understood:
+        "Picked from your past orders — these are likely due for a refill.",
+      clarifying_question: null,
+      items,
+      safety_note: null,
+      delivery_note: null,
+      personalization_applied: true,
+      total_inr: items.reduce((s, i) => s + (i.price_inr || 0), 0),
+      _source: result?._source,
+    });
   }
 
   async function placeOrder(cart) {
@@ -224,10 +252,8 @@ export default function App() {
             <Identity user={user} onSignIn={signIn} onSignOut={signOut} />
             <LearnedStrip profile={profile} />
 
-            <NeighborhoodPulse
-              city={profile?.city}
-              onTrigger={(prompt) => submit(prompt, "single")}
-            />
+            <RoutineSuggestion onTrigger={(prompt) => submit(prompt)} />
+            <ReorderSuggestion profile={profile} onReorder={reorderItems} />
 
             <h1 className="hero-title">
               Need something urgently? <span className="accent">Just say it.</span>
@@ -237,22 +263,11 @@ export default function App() {
               seconds. {user.id ? "The more you order, the smarter it gets." : ""}
             </p>
 
-            <ModeToggle
-              mode={mode}
-              onModeChange={setMode}
-              budget={budget}
-              onBudgetChange={setBudget}
-            />
-
             <HeroInput
               value={userText}
               onChange={setUserText}
               onSubmit={() => submit()}
-              placeholder={
-                mode === "battle"
-                  ? "What's the occasion? (e.g. movie night for 4)"
-                  : "Type in any language. e.g. light chali gayi…"
-              }
+              placeholder="Type in any language. e.g. light chali gayi…"
             />
 
             <SampleChips prompts={SAMPLE_PROMPTS} onPick={(t) => submit(t)} />
@@ -306,10 +321,6 @@ export default function App() {
                 {feedbackNote && <div className="feedback-note">{feedbackNote}</div>}
                 <RefineBar onRefine={refine} />
               </>
-            )}
-
-            {result.response_type === "battle" && (
-              <BattleCarts result={result} onOrder={placeOrder} />
             )}
           </section>
         )}

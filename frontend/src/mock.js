@@ -2,24 +2,118 @@
 // Also implements REAL learning in localStorage: ordering items records them,
 // and future carts surface the user's frequently-ordered items first.
 
-import { findSubstitute } from "./catalog.js";
+import { findSubstitute, CATALOG } from "./catalog.js";
 
 const SAFETY_NOTE =
   "This is not medical advice. Consult a doctor if symptoms persist beyond 48 hours or worsen. We only suggest OTC products available without a prescription.";
 
 const HIST_KEY = (uid) => `turant_hist_${uid || "guest"}`;
 
+const SECONDS_PER_DAY = 86400;
+const CAT_BY_ID = Object.fromEntries(CATALOG.map((p) => [p.product_id, p]));
+
+// Mirror of the backend replenishment cycles (Reorder Prediction). Kept in
+// sync with parse_and_generate/lambda_function.py so the offline demo behaves
+// like the live one.
+const CATEGORY_REPLENISH_DAYS = { staples: 14, health: 30, pooja: 20, monsoon: 30 };
+const PRODUCT_REPLENISH_DAYS = {
+  P001: 20, P004: 12, P005: 10, P064: 4, P062: 18, P061: 30,
+  P060: 30, P063: 12, P084: 30, P040: 12,
+};
+const REORDER_THRESHOLD = 0.8;
+
+function replenishDaysFor(pid) {
+  if (pid in PRODUCT_REPLENISH_DAYS) return PRODUCT_REPLENISH_DAYS[pid];
+  const cat = CAT_BY_ID[pid]?.category;
+  return CATEGORY_REPLENISH_DAYS[cat] || null;
+}
+
+// Built-in demo personas — mirror the SEEDED backend profiles so the offline
+// fallback can still show personalization + reorder prediction. days_ago is
+// converted to a real timestamp at read time (so it's never stale).
+const DEMO_SEED = {
+  demo_user_1: {
+    name: "Mrs. Iyer",
+    orders: [
+      { product_id: "P064", name: "Milk 1L", count: 6, days_ago: 6 },
+      { product_id: "P001", name: "Candles (pack of 10)", count: 2, days_ago: 22 },
+      { product_id: "P063", name: "Britannia Biscuits (pack of 4)", count: 3, days_ago: 15 },
+      { product_id: "P054", name: "Crocin Tablets (OTC, 10)", count: 2, days_ago: 34 },
+    ],
+  },
+  demo_user_2: {
+    name: "Aarav",
+    orders: [
+      { product_id: "P004", name: "Maggi Atta Noodles (pack of 4)", count: 5, days_ago: 14 },
+      { product_id: "P040", name: "Instant Coffee Sachets (10)", count: 4, days_ago: 16 },
+      { product_id: "P041", name: "Energy Bar (pack of 3)", count: 3, days_ago: 8 },
+    ],
+  },
+};
+
+function seededHistory(userId) {
+  const seed = DEMO_SEED[userId];
+  if (!seed) return null;
+  const now = Math.floor(Date.now() / 1000);
+  const hist = {
+    order_count: 0,
+    item_counts: {},
+    item_names: {},
+    item_last_ordered: {},
+    disliked_items: {},
+  };
+  seed.orders.forEach((o) => {
+    hist.item_counts[o.product_id] = o.count;
+    hist.item_names[o.product_id] = o.name;
+    hist.item_last_ordered[o.product_id] = now - o.days_ago * SECONDS_PER_DAY;
+    hist.order_count += o.count;
+  });
+  return hist;
+}
+
+function computeReorderSuggestions(hist, limit = 3) {
+  const lastOrdered = hist.item_last_ordered || {};
+  const now = Math.floor(Date.now() / 1000);
+  const out = [];
+  for (const [pid, ts] of Object.entries(lastOrdered)) {
+    const cycle = replenishDaysFor(pid);
+    if (!cycle) continue;
+    const daysSince = (now - ts) / SECONDS_PER_DAY;
+    if (daysSince < cycle * REORDER_THRESHOLD) continue;
+    const product = CAT_BY_ID[pid] || {};
+    const name = hist.item_names?.[pid] || product.name || pid;
+    out.push({
+      product_id: pid,
+      name,
+      days_since: Math.round(daysSince),
+      cycle_days: cycle,
+      price_inr: product.price_inr || 0,
+      eta_min: product.eta_min || 15,
+      reason: `You bought ${name} about ${Math.round(daysSince)} days ago — it's likely running low. Reorder?`,
+      urgency: Math.round((daysSince / cycle) * 100) / 100,
+    });
+  }
+  out.sort((a, b) => b.urgency - a.urgency);
+  return out.slice(0, limit);
+}
+
 function loadHistory(userId) {
   try {
-    return JSON.parse(localStorage.getItem(HIST_KEY(userId))) || {
-      order_count: 0,
-      item_counts: {},
-      item_names: {},
-      disliked_items: {},
-    };
+    const stored = JSON.parse(localStorage.getItem(HIST_KEY(userId)));
+    if (stored) return stored;
   } catch {
-    return { order_count: 0, item_counts: {}, item_names: {}, disliked_items: {} };
+    /* fall through to seed/default */
   }
+  // First visit for a demo persona → use the built-in seeded history.
+  const seeded = seededHistory(userId);
+  if (seeded) return seeded;
+  return {
+    order_count: 0,
+    item_counts: {},
+    item_names: {},
+    item_last_ordered: {},
+    disliked_items: {},
+  };
 }
 
 function saveHistory(userId, hist) {
@@ -102,34 +196,6 @@ const CLARIFY = {
   items: [], safety_note: null, delivery_note: null, personalization_applied: false, total_inr: 0,
 };
 
-const BATTLE_MOVIE = {
-  response_type: "battle",
-  situation_understood: "Movie night for 4 — Budget vs Premium.",
-  carts: [
-    {
-      tier: "budget", cart_title: "Budget Cart — Movie Night",
-      items: [
-        { product_id: "P044", name: "Salted Crackers Pack", reason: "Light savory bite", confidence: 0.85, price_inr: 35, eta_min: 10, personalized: false },
-        { product_id: "P013", name: "Haldiram Namkeen Mix 200g", reason: "Crowd-pleasing snack", confidence: 0.85, price_inr: 85, eta_min: 15, personalized: false },
-        { product_id: "P012", name: "Coca-Cola 1.25L", reason: "Shared drink", confidence: 0.85, price_inr: 65, eta_min: 15, personalized: false },
-        { product_id: "P041", name: "Energy Bar (pack of 3)", reason: "A quick bite", confidence: 0.7, price_inr: 120, eta_min: 10, personalized: false },
-      ],
-      safety_note: null, delivery_note: null, personalization_applied: false, total_inr: 305,
-    },
-    {
-      tier: "premium", cart_title: "Premium Cart — Movie Night",
-      items: [
-        { product_id: "P070", name: "Hyderabadi Chicken Biryani (serves 2)", reason: "A proper meal for the night", confidence: 0.88, price_inr: 220, eta_min: 18, personalized: false },
-        { product_id: "P013", name: "Haldiram Namkeen Mix 200g", reason: "Better snack", confidence: 0.85, price_inr: 85, eta_min: 15, personalized: false },
-        { product_id: "P012", name: "Coca-Cola 1.25L", reason: "Crowd favorite", confidence: 0.85, price_inr: 65, eta_min: 15, personalized: false },
-        { product_id: "P015", name: "Ice Cubes 1kg", reason: "Cold drinks, no waiting", confidence: 0.8, price_inr: 50, eta_min: 15, personalized: false },
-        { product_id: "P014", name: "Gulab Jamun Tin (8 pc)", reason: "Sweet ending", confidence: 0.8, price_inr: 140, eta_min: 15, personalized: false },
-      ],
-      safety_note: null, delivery_note: null, personalization_applied: false, total_inr: 560,
-    },
-  ],
-};
-
 // ---- intent matching --------------------------------------------------------
 const tests = [
   [/(light|bijli|power|electric|outage)/i, POWER_CUT],
@@ -182,8 +248,6 @@ export async function mockGenerate(payload) {
     return { response_type: "confident", cart_title: payload.previous_cart.cart_title || "Refined Cart", situation_understood: "Swapped Maggi for an energy bar.", clarifying_question: null, items, safety_note: null, delivery_note: null, personalization_applied: false, total_inr: items.reduce((s, i) => s + i.price_inr, 0) };
   }
 
-  if (payload.mode === "battle") return clone(BATTLE_MOVIE);
-
   let base = clone(CLARIFY);
   const trimmed = text.trim();
   const matched = tests.find(([rx]) => rx.test(trimmed));
@@ -199,11 +263,14 @@ export async function mockRecordOrder(payload) {
   const uid = payload.user_id;
   const hist = loadHistory(uid);
   hist.order_count += 1;
+  hist.item_last_ordered = hist.item_last_ordered || {};
+  const now = Math.floor(Date.now() / 1000);
   (payload.items || []).forEach((it) => {
     const pid = it.product_id || it.name;
     if (!pid) return;
     hist.item_counts[pid] = (hist.item_counts[pid] || 0) + 1;
     hist.item_names[pid] = it.name || pid;
+    hist.item_last_ordered[pid] = now;
   });
   saveHistory(uid, hist);
   return {
@@ -228,7 +295,9 @@ export async function mockGetProfile(payload) {
     order_count: hist.order_count,
     item_counts: hist.item_counts,
     item_names: hist.item_names,
+    item_last_ordered: hist.item_last_ordered || {},
     disliked_items: hist.disliked_items || {},
+    reorder_suggestions: computeReorderSuggestions(hist),
   };
 }
 
