@@ -12,12 +12,64 @@ Tables seeded:
 
 import json
 import os
+import time
 import boto3
 
 REGION = "us-east-1"
 dynamodb = boto3.resource("dynamodb", region_name=REGION)
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
+SECONDS_PER_DAY = 86400
+
+
+def _load_catalog_categories():
+    """product_id -> category lookup, used to build category_counts."""
+    with open(os.path.join(DATA_DIR, "catalog.json")) as f:
+        products = json.load(f)
+    return {p["product_id"]: p.get("category", "general") for p in products}
+
+
+def expand_seed_orders(profile, categories):
+    """Convert a demo user's `_seed_orders` shorthand into the same learned-
+    history fields that record_order() produces at runtime.
+
+    Each entry {product_id, name, count, days_ago} becomes:
+      - item_counts[pid]        = count
+      - item_names[pid]         = name
+      - category_counts[cat]   += count
+      - item_last_ordered[pid]  = now - days_ago (backdated, so the Reorder
+                                  Prediction feature visibly fires in demos)
+    The timestamps are real Unix seconds — the reorder engine treats this
+    exactly like genuine order history; nothing is faked at query time.
+    """
+    seed_orders = profile.pop("_seed_orders", None)
+    if not seed_orders:
+        return profile
+
+    now_ts = int(time.time())
+    item_counts = profile.get("item_counts") or {}
+    item_names = profile.get("item_names") or {}
+    category_counts = profile.get("category_counts") or {}
+    item_last_ordered = profile.get("item_last_ordered") or {}
+
+    total_orders = 0
+    for entry in seed_orders:
+        pid = entry["product_id"]
+        count = int(entry.get("count", 1))
+        item_counts[pid] = int(item_counts.get(pid, 0)) + count
+        item_names[pid] = entry.get("name", pid)
+        item_last_ordered[pid] = now_ts - int(entry.get("days_ago", 0)) * SECONDS_PER_DAY
+        cat = categories.get(pid, "general")
+        category_counts[cat] = int(category_counts.get(cat, 0)) + count
+        total_orders += count
+
+    profile["item_counts"] = item_counts
+    profile["item_names"] = item_names
+    profile["category_counts"] = category_counts
+    profile["item_last_ordered"] = item_last_ordered
+    profile["order_count"] = int(profile.get("order_count", 0)) + total_orders
+    profile["last_order_ts"] = now_ts
+    return profile
 
 
 def seed_catalog():
@@ -58,8 +110,10 @@ def seed_user_preferences():
     with open(path) as f:
         users = json.load(f)
 
+    categories = _load_catalog_categories()
     table = dynamodb.Table("UserPreferences")
     for user_id, profile in users.items():
+        profile = expand_seed_orders(profile, categories)
         table.put_item(Item=profile)
 
     print(f"Seeded {len(users)} user profiles into UserPreferences table.")

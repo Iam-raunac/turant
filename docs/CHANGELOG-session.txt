@@ -1,0 +1,212 @@
+==============================================================================
+TURANT — SESSION CHANGELOG
+What was built and changed in this working session (with context).
+==============================================================================
+
+Read this top-to-bottom if you're picking the project back up. It explains
+the starting point, every change made, why, and exactly what you still need
+to do to see it all working.
+
+------------------------------------------------------------------------------
+0. STARTING POINT (the checkpoint before this session)
+------------------------------------------------------------------------------
+When this session began, the project had:
+
+- Backend data files: catalog.json (37 products), user_preferences.json
+  (2 HARDCODED demo users: Mrs. Iyer, Aarav), situation_playbooks.json (legacy).
+- DynamoDB scripts: setup_dynamodb.py (4 tables incl. UserPreferences) and
+  seed_data.py.
+- A working Lambda `parse_and_generate` (v7) with 4 features:
+    1. Adaptive Situation Engine (confident / best_guess / clarifying_question)
+    2. Explainable + Personalized reasoning (from hardcoded preferences)
+    3. Conversational refinement (previous_cart)
+    4. Cart Battle (budget vs premium)
+- A duplicate `generate_cart` Lambda (legacy copy, not used).
+- An EMPTY frontend folder (only frontend/src/components/ existed, no files).
+- Docs: PRD-Turant.md and HANDOFF.md.
+
+Problems at the start:
+- No frontend at all.
+- Personalization was STATIC — based on hardcoded user profiles. Nothing was
+  ever learned from what a user actually ordered.
+- Profiles were fixed (demo_user_1 / demo_user_2), not real/dynamic.
+
+==============================================================================
+PART 1 — BUILT THE ENTIRE FRONTEND (React + Vite)
+==============================================================================
+Created a full mobile-styled React app under frontend/.
+
+New files:
+- frontend/package.json, vite.config.js, index.html, .gitignore, .env.example
+- frontend/README.md  (run + Amplify deploy instructions)
+- frontend/src/main.jsx, App.jsx, styles.css
+- frontend/src/api.js   — API client (calls API Gateway, unwraps proxy responses)
+- frontend/src/mock.js  — bundled offline fallback so the demo never hard-fails
+- frontend/src/components/:
+    Header.jsx, HeroInput.jsx, SampleChips.jsx, ProfileSwitcher.jsx (later
+    replaced), ModeToggle.jsx, Loading.jsx, Cart.jsx, BattleCarts.jsx,
+    ClarifyingQuestion.jsx, RefineBar.jsx, OrderConfirmation.jsx, ErrorBanner.jsx
+
+What it does:
+- Renders all 3 response modes (confident / best_guess / clarifying_question),
+  each with its own visual treatment.
+- Profile switcher, Cart Battle toggle with budget input, refinement bar,
+  mock-checkout + order confirmation.
+- If VITE_API_URL is empty OR a live call fails, it transparently falls back
+  to the local mock (the PRD's demo safety net).
+
+Verified: `npm install` + `npm run build` succeed; dev server returns HTTP 200.
+
+------------------------------------------------------------------------------
+Also added (backend dev convenience):
+- backend/scripts/local_server.py — a tiny HTTP server that wraps the Lambda
+  handler so the frontend can hit a real backend locally without API Gateway.
+  (You ended up using a real API Gateway instead — that's fine, this is optional.)
+
+==============================================================================
+PART 2 — DYNAMIC LEARNING + DYNAMIC PROFILES
+==============================================================================
+GOAL (your request): stop using hardcoded preferences. When a user orders an
+item (e.g. biryani) repeatedly, it should resurface in future relevant carts.
+Profiles should be created on the fly, not pre-built.
+
+BACKEND — backend/lambda/parse_and_generate/lambda_function.py
+- Added `import time` and `from decimal import Decimal`.
+- New function record_order(user_id, items, name):
+    * Auto-creates a user profile on first order (no seeding needed).
+    * Keeps a running tally: item_counts {product_id: times}, item_names,
+      category_counts, order_count, last_order_ts.
+    * Preserves any seeded demographic fields if they exist.
+- Rewrote build_personalization_block() + new build_learned_history_block():
+    * Injects the user's REAL order history into the prompt.
+- New _json_safe() helper: converts DynamoDB Decimal values so json.dumps works.
+- lambda_handler now ROUTES on an "action" field (all on the SAME endpoint, so
+  no new API Gateway routes are needed):
+    * action="record_order"  -> records an order into learned history
+    * action="get_profile"    -> returns what's been learned (for the UI)
+    * default (no action)     -> generate a cart (unchanged behavior)
+  NOTE: this requires the Lambda's IAM role to allow dynamodb:PutItem on
+  UserPreferences (per HANDOFF it has full DynamoDB access, so you're covered).
+
+CATALOG — backend/data/catalog.json
+- Added 5 real meal items so food-learning is demoable:
+    P070 Hyderabadi Chicken Biryani, P071 Veg Pulao, P072 Butter Paneer,
+    P073 Tandoori Roti, P074 Veg Hakka Noodles.
+- Removed the hardcoded "37 products" text in the prompt; it now uses the live
+  catalog count.
+
+FRONTEND
+- api.js rewritten: added recordOrder() and getProfile(); every response now
+  carries _source ("live" | "mock" | "mock-fallback") so the UI shows which
+  backend is in use.
+- mock.js rewritten: supports all 3 actions AND learns in localStorage, so the
+  offline demo also "remembers" past orders.
+- App.jsx rewritten:
+    * Dynamic identity: sign in with ANY name -> a stable user_id is generated
+      and stored in localStorage (learning persists across sessions). "Guest"
+      = anonymous (no personalization).
+    * Placing an order now calls recordOrder(), then refreshes the profile.
+- New components:
+    * Identity.jsx     — sign in / switch user / sign out (replaces the old
+      hardcoded ProfileSwitcher).
+    * LearnedStrip.jsx — "Turant remembers: Biryani x3 ..." chip strip.
+- OrderConfirmation.jsx — now shows a "Turant just learned from this order"
+  note with the running order count.
+- Header.jsx — restyled into an Amazon-style header (logo, "Deliver in 10 min",
+  search bar, account, cart badge) + a navy sub-nav of situation tags.
+- styles.css — appended a v2 section with the Amazon look + identity + learned
+  strip styling.
+
+Verified: backend compiles; a local stubbed test confirmed two biryani orders
+tally correctly and appear in the personalization prompt block.
+
+==============================================================================
+PART 3 — FIX: IRRELEVANT ITEMS BEING ADDED TO EVERY CART
+==============================================================================
+PROBLEM YOU HIT: after ordering guest-dinner items, EVERY later cart got
+padded with Naan, Paneer, Coca-Cola, Haldiram — even a Raksha Bandhan rakhi
+request and a "remote battery" request. Two root causes:
+
+  (1) The learned-history prompt said "STRONGLY prefer including" past orders,
+      so the model forced favorites into unrelated situations.
+  (2) The catalog was food/guest heavy and had NO batteries, NO rakhi, etc., so
+      for non-food needs the model substituted food instead of admitting no match.
+
+FIXES — backend/lambda/parse_and_generate/lambda_function.py
+- Rewrote LEARNED-HISTORY RULES: relevance to the current situation is now an
+  ABSOLUTE gate. Past orders are a TIE-BREAKER ONLY. Explicit "do NOT add" lists
+  per situation (e.g. festival/pooja -> never naan/paneer/cola; health -> never
+  food). Past orders never justify an off-theme item.
+- Relaxed the "must pick 4-6 items" rule -> "a tight 3-item cart beats a padded
+  6-item one." Added: if the catalog has no good match, return a smaller/honest
+  cart or ask a clarifying question instead of substituting unrelated food.
+
+CATALOG — backend/data/catalog.json (now 52 products, 10 balanced categories)
+- essentials: AA Batteries, AAA Batteries, USB-C Cable, Extension Board
+- monsoon:    Mosquito Repellent Refill, Compact Umbrella
+- festival:   Rakhi Set, Soan Papdi, Roli Chawal Tikka Set
+- guests:     Disposable Plates
+
+FRONTEND — frontend/src/mock.js
+- applyLearning() changed to RE-RANK ONLY: it boosts items already in a cart
+  that the user buys often, but NEVER pads the cart with unrelated favorites
+  (keeps mock behavior consistent with the new backend philosophy).
+
+Verified: backend compiles; frontend builds clean.
+
+CAVEAT: relevance is enforced via the PROMPT, not hard code. Nova Lite is a
+small model, so rare bleed-through is possible. The robust next step (not yet
+done) is a code-side category filter that only allows learned items whose
+category matches the detected situation.
+
+==============================================================================
+WHAT YOU STILL NEED TO DO (deploy the changes)
+==============================================================================
+1. Re-seed the expanded catalog + ensure UserPreferences table exists:
+     cd backend/scripts
+     source ../../venv/bin/activate      (or however you activate your venv)
+     python3 setup_dynamodb.py           (creates UserPreferences if missing)
+     python3 seed_data.py                (loads the 52-product catalog + users)
+
+2. Redeploy the Lambda (REQUIRED — the new record_order/get_profile actions and
+   all prompt fixes live here):
+     AWS Console -> Lambda -> parse_and_generate -> Code
+     -> paste the full backend/lambda/parse_and_generate/lambda_function.py
+     -> Deploy
+
+3. Frontend already points at your live API (frontend/.env.local has the
+   API Gateway URL). Just run:
+     cd frontend
+     npm run dev
+
+DEMO SCRIPT TO VERIFY THE FIXES:
+- Sign in as a name (e.g. "Raunak").
+- "mehmaan aa rahe hain, dinner banana hai" -> order it (incl. Biryani).
+- Ask again -> Biryani resurfaces marked "You order this often" (learning works).
+- "remote ki battery chahiye" -> AA/AAA batteries, NO naan (relevance works).
+- "rakhi for rakshabandhan" -> Rakhi Set + Soan Papdi + Roli Chawal, NO cola.
+
+==============================================================================
+FILES TOUCHED THIS SESSION (quick index)
+==============================================================================
+Backend:
+- backend/lambda/parse_and_generate/lambda_function.py   (learning + prompt fixes)
+- backend/data/catalog.json                              (37 -> 52 products)
+- backend/scripts/local_server.py                        (NEW, optional dev server)
+
+Frontend (all NEW this session):
+- frontend/package.json, vite.config.js, index.html, .gitignore, .env.example,
+  README.md
+- frontend/src/main.jsx, App.jsx, api.js, mock.js, styles.css
+- frontend/src/components/Header.jsx, HeroInput.jsx, SampleChips.jsx,
+  ProfileSwitcher.jsx, ModeToggle.jsx, Loading.jsx, Cart.jsx, BattleCarts.jsx,
+  ClarifyingQuestion.jsx, RefineBar.jsx, OrderConfirmation.jsx, ErrorBanner.jsx,
+  Identity.jsx, LearnedStrip.jsx
+
+Docs:
+- docs/CHANGELOG-session.txt  (this file)
+
+NOTE: backend/lambda/generate_cart/lambda_function.py is the old legacy copy and
+was NOT updated with the learning/relevance changes. The live, current engine is
+parse_and_generate. You can delete generate_cart later if you want.
+==============================================================================

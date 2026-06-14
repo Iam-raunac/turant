@@ -13,7 +13,13 @@
       "otc_pain_relief": "Crocin"
     },
     "purchase_history_summary": "Frequently buys: Maggi, Crocin, Britannia biscuits. Avoids: spicy snacks.",
-    "household_context": "Senior citizen, lives with husband on BP medication. Tier-2 city."
+    "household_context": "Senior citizen, lives with husband on BP medication. Tier-2 city.",
+    "_seed_orders": [
+      { "product_id": "P064", "name": "Milk 1L", "count": 6, "days_ago": 6 },
+      { "product_id": "P001", "name": "Candles (pack of 10)", "count": 2, "days_ago": 22 },
+      { "product_id": "P063", "name": "Britannia Biscuits (pack of 4)", "count": 3, "days_ago": 15 },
+      { "product_id": "P054", "name": "Crocin Tablets (OTC, 10)", "count": 2, "days_ago": 34 }
+    ]
   },
   "demo_user_2": {
     "user_id": "demo_user_2",
@@ -29,6 +35,11 @@
       "otc_pain_relief": "Crocin"
     },
     "purchase_history_summary": "Frequently buys: Nescafe, Maggi, Parle-G, energy bars. Hostel student.",
-    "household_context": "College hostel, exam stress, irregular sleep, single occupant."
+    "household_context": "College hostel, exam stress, irregular sleep, single occupant.",
+    "_seed_orders": [
+      { "product_id": "P004", "name": "Maggi Atta Noodles (pack of 4)", "count": 5, "days_ago": 14 },
+      { "product_id": "P040", "name": "Instant Coffee Sachets (10)", "count": 4, "days_ago": 16 },
+      { "product_id": "P041", "name": "Energy Bar (pack of 3)", "count": 3, "days_ago": 8 }
+    ]
   }
 }

@@ -430,5 +430,196 @@
       "reorder"
     ],
     "eta_min": 20
+  },
+  {
+    "product_id": "P070",
+    "name": "Hyderabadi Chicken Biryani (serves 2)",
+    "category": "food",
+    "price_inr": 220,
+    "image_url": "https://placehold.co/200x200?text=Biryani",
+    "tags": [
+      "food",
+      "meal",
+      "main-course"
+    ],
+    "eta_min": 18
+  },
+  {
+    "product_id": "P071",
+    "name": "Veg Pulao (serves 2)",
+    "category": "food",
+    "price_inr": 150,
+    "image_url": "https://placehold.co/200x200?text=Pulao",
+    "tags": [
+      "food",
+      "meal",
+      "veg"
+    ],
+    "eta_min": 18
+  },
+  {
+    "product_id": "P072",
+    "name": "Butter Paneer (serves 2)",
+    "category": "food",
+    "price_inr": 190,
+    "image_url": "https://placehold.co/200x200?text=Butter+Paneer",
+    "tags": [
+      "food",
+      "meal",
+      "veg",
+      "main-course"
+    ],
+    "eta_min": 18
+  },
+  {
+    "product_id": "P073",
+    "name": "Tandoori Roti (6 pc)",
+    "category": "food",
+    "price_inr": 60,
+    "image_url": "https://placehold.co/200x200?text=Roti",
+    "tags": [
+      "food",
+      "meal",
+      "bread"
+    ],
+    "eta_min": 18
+  },
+  {
+    "product_id": "P074",
+    "name": "Veg Hakka Noodles (serves 2)",
+    "category": "food",
+    "price_inr": 130,
+    "image_url": "https://placehold.co/200x200?text=Noodles",
+    "tags": [
+      "food",
+      "meal",
+      "chinese"
+    ],
+    "eta_min": 18
+  },
+  {
+    "product_id": "P080",
+    "name": "AA Batteries (pack of 4)",
+    "category": "essentials",
+    "price_inr": 90,
+    "image_url": "https://placehold.co/200x200?text=AA+Batteries",
+    "tags": [
+      "electronics",
+      "remote",
+      "battery"
+    ],
+    "eta_min": 12
+  },
+  {
+    "product_id": "P081",
+    "name": "AAA Batteries (pack of 4)",
+    "category": "essentials",
+    "price_inr": 85,
+    "image_url": "https://placehold.co/200x200?text=AAA+Batteries",
+    "tags": [
+      "electronics",
+      "remote",
+      "battery"
+    ],
+    "eta_min": 12
+  },
+  {
+    "product_id": "P082",
+    "name": "USB-C Charging Cable",
+    "category": "essentials",
+    "price_inr": 199,
+    "image_url": "https://placehold.co/200x200?text=USB-C+Cable",
+    "tags": [
+      "electronics",
+      "charging"
+    ],
+    "eta_min": 14
+  },
+  {
+    "product_id": "P083",
+    "name": "Extension Board (4 socket)",
+    "category": "essentials",
+    "price_inr": 349,
+    "image_url": "https://placehold.co/200x200?text=Extension+Board",
+    "tags": [
+      "electronics",
+      "power"
+    ],
+    "eta_min": 16
+  },
+  {
+    "product_id": "P084",
+    "name": "Mosquito Repellent Refill",
+    "category": "monsoon",
+    "price_inr": 79,
+    "image_url": "https://placehold.co/200x200?text=Mosquito+Repellent",
+    "tags": [
+      "monsoon",
+      "home"
+    ],
+    "eta_min": 14
+  },
+  {
+    "product_id": "P085",
+    "name": "Compact Umbrella",
+    "category": "monsoon",
+    "price_inr": 299,
+    "image_url": "https://placehold.co/200x200?text=Umbrella",
+    "tags": [
+      "monsoon",
+      "rain"
+    ],
+    "eta_min": 16
+  },
+  {
+    "product_id": "P086",
+    "name": "Rakhi Set (2 pc)",
+    "category": "festival",
+    "price_inr": 120,
+    "image_url": "https://placehold.co/200x200?text=Rakhi",
+    "tags": [
+      "festival",
+      "rakshabandhan",
+      "rakhi"
+    ],
+    "eta_min": 16
+  },
+  {
+    "product_id": "P087",
+    "name": "Soan Papdi 250g",
+    "category": "festival",
+    "price_inr": 110,
+    "image_url": "https://placehold.co/200x200?text=Soan+Papdi",
+    "tags": [
+      "festival",
+      "sweets",
+      "dessert"
+    ],
+    "eta_min": 16
+  },
+  {
+    "product_id": "P088",
+    "name": "Roli Chawal Tikka Set",
+    "category": "festival",
+    "price_inr": 40,
+    "image_url": "https://placehold.co/200x200?text=Roli+Chawal",
+    "tags": [
+      "festival",
+      "pooja",
+      "rakshabandhan"
+    ],
+    "eta_min": 16
+  },
+  {
+    "product_id": "P089",
+    "name": "Disposable Plates (pack of 25)",
+    "category": "guests",
+    "price_inr": 99,
+    "image_url": "https://placehold.co/200x200?text=Plates",
+    "tags": [
+      "guests",
+      "party"
+    ],
+    "eta_min": 15
   }
 ]

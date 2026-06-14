@@ -1,49 +1,96 @@
-import { useMemo, useState } from "react";
-import { generateCart } from "./api.js";
+import { useCallback, useEffect, useState } from "react";
+import { generateCart, recordOrder, getProfile, recordRemoval } from "./api.js";
 import Header from "./components/Header.jsx";
 import HeroInput from "./components/HeroInput.jsx";
 import SampleChips from "./components/SampleChips.jsx";
-import ProfileSwitcher from "./components/ProfileSwitcher.jsx";
-import ModeToggle from "./components/ModeToggle.jsx";
+import Identity from "./components/Identity.jsx";
+import LearnedStrip from "./components/LearnedStrip.jsx";
+import RoutineSuggestion from "./components/RoutineSuggestion.jsx";
+import ReorderSuggestion from "./components/ReorderSuggestion.jsx";
 import Loading from "./components/Loading.jsx";
 import Cart from "./components/Cart.jsx";
-import BattleCarts from "./components/BattleCarts.jsx";
 import ClarifyingQuestion from "./components/ClarifyingQuestion.jsx";
 import RefineBar from "./components/RefineBar.jsx";
 import OrderConfirmation from "./components/OrderConfirmation.jsx";
 import ErrorBanner from "./components/ErrorBanner.jsx";
-
-const PROFILES = [
-  { id: "", name: "Anonymous", subtitle: "no personalization" },
-  { id: "demo_user_1", name: "Mrs. Iyer", subtitle: "Chennai · senior · BP context" },
-  { id: "demo_user_2", name: "Aarav", subtitle: "Delhi · hostel · exam stress" },
-];
+import SmartSubstitution from "./components/SmartSubstitution.jsx";
 
 const SAMPLE_PROMPTS = [
   "light chali gayi, monsoon hai bahar, ghar pe kuch nahi hai",
   "bukhar lag raha hai, throat bhi kharab hai",
-  "kal pooja hai, last-minute saamagri chahiye",
+  "mehmaan aa rahe hain, dinner banana hai",
   "movie night for 4 people",
   "kuch chahiye",
 ];
 
+const IDENTITY_KEY = "turant_identity";
+
+function slugify(name) {
+  const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+  return `${base || "user"}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function loadIdentity() {
+  try {
+    return JSON.parse(localStorage.getItem(IDENTITY_KEY)) || { id: "", name: "" };
+  } catch {
+    return { id: "", name: "" };
+  }
+}
+
 export default function App() {
+  const [user, setUser] = useState(loadIdentity);
+  const [profile, setProfile] = useState(null);
+
   const [userText, setUserText] = useState("");
-  const [userId, setUserId] = useState("");
-  const [mode, setMode] = useState("single"); // single | battle
-  const [budget, setBudget] = useState(500);
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [ordered, setOrdered] = useState(null);
+  const [feedbackNote, setFeedbackNote] = useState(null);
 
-  const profile = useMemo(
-    () => PROFILES.find((p) => p.id === userId) || PROFILES[0],
-    [userId]
-  );
+  const refreshProfile = useCallback(async (uid) => {
+    if (!uid) {
+      setProfile(null);
+      return;
+    }
+    try {
+      const p = await getProfile(uid);
+      setProfile(p);
+    } catch {
+      setProfile(null);
+    }
+  }, []);
 
-  async function submit(textOverride, modeOverride) {
+  useEffect(() => {
+    refreshProfile(user.id);
+  }, [user.id, refreshProfile]);
+
+  function signIn(name, fixedId) {
+    const existing = loadIdentity();
+    // Demo personas pass a fixed id (e.g. demo_user_1) so they map to the
+    // seeded profile. Otherwise generate a stable id and keep it across
+    // sessions for the same name so learning persists.
+    let id = fixedId;
+    if (!id) {
+      id =
+        existing.name.toLowerCase() === name.toLowerCase() && existing.id
+          ? existing.id
+          : slugify(name);
+    }
+    const next = { id, name };
+    localStorage.setItem(IDENTITY_KEY, JSON.stringify(next));
+    setUser(next);
+  }
+
+  function signOut() {
+    localStorage.removeItem(IDENTITY_KEY);
+    setUser({ id: "", name: "" });
+    setProfile(null);
+  }
+
+  async function submit(textOverride) {
     const text = (textOverride ?? userText).trim();
     if (!text) return;
 
@@ -52,18 +99,13 @@ export default function App() {
     setError(null);
     setResult(null);
     setOrdered(null);
+    setFeedbackNote(null);
 
     const payload = { user_text: text };
-    if (userId) payload.user_id = userId;
-    const useMode = modeOverride ?? mode;
-    if (useMode === "battle") {
-      payload.mode = "battle";
-      payload.budget_inr = Number(budget) || 500;
-    }
+    if (user.id) payload.user_id = user.id;
 
     try {
-      const data = await generateCart(payload);
-      setResult(data);
+      setResult(await generateCart(payload));
     } catch (err) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -72,19 +114,13 @@ export default function App() {
   }
 
   async function refine(refinementText) {
-    if (!result || result.response_type === "battle") return;
+    if (!result) return;
     setLoading(true);
     setError(null);
-
-    const payload = {
-      user_text: refinementText,
-      previous_cart: result,
-    };
-    if (userId) payload.user_id = userId;
-
+    const payload = { user_text: refinementText, previous_cart: result };
+    if (user.id) payload.user_id = user.id;
     try {
-      const data = await generateCart(payload);
-      setResult(data);
+      setResult(await generateCart(payload));
     } catch (err) {
       setError(err.message || "Refinement failed");
     } finally {
@@ -92,9 +128,54 @@ export default function App() {
     }
   }
 
-  function placeOrder(cart) {
+  // Proactive Feature B — build a cart directly from the (data-driven) reorder
+  // suggestions. No LLM call: these come from the user's real order history.
+  function reorderItems(suggestions) {
+    if (!suggestions?.length) return;
+    const items = suggestions.map((s) => ({
+      product_id: s.product_id,
+      name: s.name,
+      reason: s.reason,
+      confidence: 0.9,
+      price_inr: s.price_inr,
+      eta_min: s.eta_min,
+      personalized: true,
+    }));
+    setError(null);
+    setOrdered(null);
+    setFeedbackNote(null);
+    setResult({
+      response_type: "confident",
+      cart_title: "Reorder — running low",
+      situation_understood:
+        "Picked from your past orders — these are likely due for a refill.",
+      clarifying_question: null,
+      items,
+      safety_note: null,
+      delivery_note: null,
+      personalization_applied: true,
+      total_inr: items.reduce((s, i) => s + (i.price_inr || 0), 0),
+      _source: result?._source,
+    });
+  }
+
+  async function placeOrder(cart) {
     const eta = Math.max(...(cart.items || []).map((i) => i.eta_min || 12), 12);
     setOrdered({ cart, eta });
+
+    // Record the order so Turant learns — only when signed in.
+    if (user.id && cart.items?.length) {
+      try {
+        await recordOrder({
+          userId: user.id,
+          name: user.name,
+          items: cart.items.map((i) => ({ product_id: i.product_id, name: i.name })),
+        });
+        await refreshProfile(user.id);
+      } catch (err) {
+        console.error("record order failed", err);
+      }
+    }
   }
 
   function reset() {
@@ -102,46 +183,91 @@ export default function App() {
     setOrdered(null);
     setUserText("");
     setError(null);
+    setFeedbackNote(null);
   }
+
+  function withRecalculatedTotal(cart, items) {
+    return {
+      ...cart,
+      items,
+      total_inr: items.reduce((s, i) => s + (i.price_inr || 0), 0),
+    };
+  }
+
+  // Smart Substitution — accept the proposed swap for an out-of-stock item.
+  function applySubstitute(targetId, substituteItem) {
+    if (!result?.items) return;
+    const items = result.items.map((it) =>
+      it.product_id === targetId ? substituteItem : it
+    );
+    setResult(withRecalculatedTotal(result, items));
+  }
+
+  // Smart Substitution — user declined the swap; drop the OOS item.
+  function dropItem(targetId) {
+    if (!result?.items) return;
+    const items = result.items.filter((it) => it.product_id !== targetId);
+    setResult(withRecalculatedTotal(result, items));
+  }
+
+  // Confidence Feedback Loop — remove an item and store it as a negative signal.
+  async function removeItem(item) {
+    if (!result?.items) return;
+    const items = result.items.filter((it) => it.product_id !== item.product_id);
+    setResult(withRecalculatedTotal(result, items));
+
+    const context = result.cart_title || result.situation_understood || null;
+    if (user.id) {
+      setFeedbackNote(
+        `📝 Noted — Turant won't suggest ${item.name}${
+          context ? ` for "${context}"` : ""
+        } next time.`
+      );
+      try {
+        await recordRemoval({
+          userId: user.id,
+          items: [{ product_id: item.product_id, name: item.name }],
+          context,
+        });
+        await refreshProfile(user.id);
+      } catch (err) {
+        console.error("record removal failed", err);
+      }
+    } else {
+      setFeedbackNote(
+        `Removed ${item.name}. Sign in so Turant remembers this preference next time.`
+      );
+    }
+  }
+
+  const showHome = !result && !loading && !ordered;
 
   return (
     <div className="app">
-      <Header profileName={profile.name} />
+      <Header user={user} cartCount={result?.items?.length || 0} />
 
       <main className="container">
-        {!result && !loading && !ordered && (
+        {showHome && (
           <section className="hero">
+            <Identity user={user} onSignIn={signIn} onSignOut={signOut} />
+            <LearnedStrip profile={profile} />
+
+            <RoutineSuggestion onTrigger={(prompt) => submit(prompt)} />
+            <ReorderSuggestion profile={profile} onReorder={reorderItems} />
+
             <h1 className="hero-title">
-              Need something urgently?<br />
-              <span className="accent">Just say it.</span>
+              Need something urgently? <span className="accent">Just say it.</span>
             </h1>
             <p className="hero-sub">
-              No searching. No 47 results. One confident cart with reasons —
-              under 10 seconds.
+              No searching. No 47 results. One confident cart with reasons — in
+              seconds. {user.id ? "The more you order, the smarter it gets." : ""}
             </p>
-
-            <ProfileSwitcher
-              profiles={PROFILES}
-              currentId={userId}
-              onChange={setUserId}
-            />
-
-            <ModeToggle
-              mode={mode}
-              onModeChange={setMode}
-              budget={budget}
-              onBudgetChange={setBudget}
-            />
 
             <HeroInput
               value={userText}
               onChange={setUserText}
               onSubmit={() => submit()}
-              placeholder={
-                mode === "battle"
-                  ? "What's the occasion? (e.g. movie night for 4)"
-                  : "Type in any language. e.g. light chali gayi…"
-              }
+              placeholder="Type in any language. e.g. light chali gayi…"
             />
 
             <SampleChips prompts={SAMPLE_PROMPTS} onPick={(t) => submit(t)} />
@@ -154,13 +280,13 @@ export default function App() {
 
         {!loading && result && !ordered && (
           <section className="result-section">
-            <button className="back-btn" onClick={reset}>
-              ← Start over
-            </button>
+            <button className="back-btn" onClick={reset}>← Start over</button>
 
-            {result._fallback && (
+            {result._source && result._source !== "live" && (
               <div className="fallback-banner">
-                Showing a local fallback response (API unreachable).
+                {result._source === "mock-fallback"
+                  ? `Live API unreachable — showing local fallback. (${result._error || ""})`
+                  : "Demo mode: using local mock data (no API URL set)."}
               </div>
             )}
 
@@ -173,20 +299,28 @@ export default function App() {
 
             {result.response_type === "best_guess" && (
               <>
-                <Cart cart={result} variant="best_guess" onOrder={() => placeOrder(result)} />
+                <SmartSubstitution
+                  cart={result}
+                  onApply={applySubstitute}
+                  onDrop={dropItem}
+                />
+                <Cart cart={result} variant="best_guess" onOrder={() => placeOrder(result)} onRemove={removeItem} />
+                {feedbackNote && <div className="feedback-note">{feedbackNote}</div>}
                 <RefineBar onRefine={refine} />
               </>
             )}
 
             {result.response_type === "confident" && (
               <>
-                <Cart cart={result} variant="confident" onOrder={() => placeOrder(result)} />
+                <SmartSubstitution
+                  cart={result}
+                  onApply={applySubstitute}
+                  onDrop={dropItem}
+                />
+                <Cart cart={result} variant="confident" onOrder={() => placeOrder(result)} onRemove={removeItem} />
+                {feedbackNote && <div className="feedback-note">{feedbackNote}</div>}
                 <RefineBar onRefine={refine} />
               </>
-            )}
-
-            {result.response_type === "battle" && (
-              <BattleCarts result={result} onOrder={placeOrder} />
             )}
           </section>
         )}
@@ -195,6 +329,7 @@ export default function App() {
           <OrderConfirmation
             cart={ordered.cart}
             eta={ordered.eta}
+            learned={user.id ? profile : null}
             onDone={reset}
           />
         )}
