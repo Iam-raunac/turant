@@ -411,10 +411,6 @@ button:disabled {
   border-top: 4px solid var(--green);
 }
 
-.cart-best_guess {
-  border-top: 4px solid var(--amber);
-}
-
 .cart-header {
   margin-bottom: 12px;
 }

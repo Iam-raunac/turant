@@ -105,21 +105,22 @@ No search. No 47 results. No brand comparison. Just a cart with reasons.
 
 ### 1. Adaptive Situation Engine
 
-The AI decides how confident to be *before* it responds. Three modes, self-selected:
+The AI decides how confident to be *before* it responds. It's binary — no wishy-washy middle:
 
 | What the user says | Mode | What happens |
 |---|---|---|
-| "light chali gayi, monsoon hai bahar" | **Confident** | Full cart, 5–6 items, each with a reason |
-| "kal kuch plan hai" | **Best Guess** | Smaller cart, opens with "Assuming you mean..." |
+| "light chali gayi, monsoon hai bahar" | **Confident** | Full cart, 3–6 items, each with a reason |
 | "kuch chahiye" | **Clarifying Question** | No cart — one short question back |
 
-The confidence floor is hard-coded at 0.6. If the model can't honestly reach that threshold for enough items, it asks instead of guessing wrong.
+The confidence floor is hard-coded at 0.6. If the model can't honestly pick at least 3 relevant items above that threshold, it asks one question instead of guessing wrong. "I know exactly what you need" or "let me ask one thing first" — nothing in between.
 
 ### 2. Explainable, Personalized Reasoning
 
 Every item comes with a one-line reason in plain language. When the user has past orders, those preferences surface — *"Maggi — your usual choice"* — with a ✨ badge.
 
 The model picks the products. A deterministic Python layer in Lambda sets the personalization flags by matching item names against the user's brand history. This separation matters: the model is creative, the code is reliable.
+
+**Critical rule:** Past order history personalizes *item selection*, never the *situation identification*. If a user says "shaam ho gayi kuch khane ka man" (evening, hungry), the cart title is "Evening Snacks" — not "Power Cut Kit" even if they often order candles. The situation comes from the current message, not from what they bought before.
 
 ### 3. Conversational Refinement
 
@@ -224,6 +225,15 @@ Today at our two demo users, the system costs literally ₹0. At 10M Indian cust
 One Lambda function handles everything — `parse_and_generate`. The request body's `action` field (`generate` / `substitute` / `record_order` / `record_removal` / `get_profile`) routes to the right behavior. This keeps cold-start cost minimal and the whole backend auditable in one file.
 
 The model's JSON output goes through a Python validation layer before it ever reaches the frontend. Personalization flags, safety-note enforcement, delivery-note math — none of these are trusted to the model. The code sets them deterministically.
+
+### Key Design Principle: Situation vs Personalization
+
+The system strictly separates *what* the user needs (situation) from *which variant* they prefer (personalization):
+
+- **Situation identification:** Comes ONLY from the current message. "Shaam ho gayi kuch khane ka man" → Evening Snacks cart, regardless of order history.
+- **Item personalization:** Uses past orders to prefer Maggi over Yippee, Coca-Cola over Pepsi, etc. — but only for items that already fit the situation.
+
+This prevents the common personalization mistake where a user who often orders candles gets a "Power Cut Kit" when they're actually just hungry. Past orders inform choices, never the problem definition.
 
 ### Why no EC2
 
@@ -596,6 +606,8 @@ Some things weren't left to the model's discretion:
 **Delivery flag only fires for items strictly over 20 minutes.** Items at 12–18 min are standard Amazon Now speed and don't get flagged. We ran into a bug where the model was flagging 15-minute items — fixed by moving the check to Python where the math is exact.
 
 **Personalization flags are set by Python, not the model.** The model picks the right products. A separate function then scans every item name against `favorite_brands` from DynamoDB and sets `personalized: true` deterministically. The model doesn't guess at metadata.
+
+**Situation comes from the current message, not order history.** If a user who often orders candles says "shaam ho gayi kuch khane ka man" (evening, hungry), the cart title must be "Evening Snacks" — not "Power Cut Kit." The prompt explicitly tells the model: past orders personalize item selection, never the situation type. This prevents the common mistake where heavy buyers of Category X get misclassified into X situations when they actually need something else.
 
 ---
 

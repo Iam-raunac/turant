@@ -3,8 +3,9 @@ Turant — parse_and_generate Lambda function (v8)
 
 Single engine implementing the core features:
 
-Feature 1 — Adaptive Situation Engine (3-tier response)
-   confident / best_guess / clarifying_question modes.
+Feature 1 — Adaptive Situation Engine (binary response)
+   confident / clarifying_question. No middle "best guess" — the model is
+   either confident enough to build a real cart, or it asks ONE question.
 
 Feature 2 — Explainable + Personalized Reasoning
    Per-item "reason" field; brand preference acknowledgement when user_id
@@ -57,6 +58,18 @@ STANDARD_SAFETY_NOTE = (
     "This is not medical advice. Consult a doctor if symptoms persist beyond "
     "48 hours or worsen. We only suggest OTC products available without a "
     "prescription."
+)
+
+# Symptoms that justify putting medical / OTC items in a cart. If none of these
+# appear in the user's message, medicines are stripped deterministically (see
+# strip_medical_when_no_symptom) — a favorite Crocin must not show up in a
+# power-cut or guests cart just because the user buys it often.
+HEALTH_KEYWORDS = (
+    "fever", "bukhar", "cold", "cough", "sardi", "khaansi", "khansi", "throat",
+    "gala kharab", "body ache", "bodyache", "headache", "sir dard", "sirdard",
+    "stomach", "pet dard", "sick", "ill", "unwell", "tabiyat", "dard", "pain",
+    "vomit", "ulti", "loose motion", "acidity", "migraine", "viral", "flu",
+    "medicine", "dawa", "dawai",
 )
 
 # ---------------------------------------------------------------------------
@@ -185,6 +198,22 @@ def get_user_preferences(user_id):
     return response.get("Item")
 
 
+def _normalize_items(items):
+    """Accept items as either bare product-id strings (["P001"]) or dicts
+    ({"product_id": "P001", "name": "Candles"}) and always return a list of
+    dicts. Prevents 'str' object has no attribute 'get' crashes when a caller
+    sends the legacy string format.
+    """
+    normalized = []
+    for it in items or []:
+        if isinstance(it, str):
+            normalized.append({"product_id": it, "name": it})
+        elif isinstance(it, dict):
+            normalized.append(it)
+        # silently skip anything else (None, numbers, etc.)
+    return normalized
+
+
 def record_order(user_id, items, name=None):
     """Append an order to the user's learned history.
 
@@ -204,7 +233,7 @@ def record_order(user_id, items, name=None):
     catalog_by_id = {p["product_id"]: p for p in get_full_catalog()}
 
     now_ts = int(time.time())
-    for it in items:
+    for it in _normalize_items(items):
         pid = it.get("product_id") or it.get("name")
         if not pid:
             continue
@@ -256,7 +285,7 @@ def record_removal(user_id, items, context=None):
 
     catalog_by_id = {p["product_id"]: p for p in get_full_catalog()}
 
-    for it in items:
+    for it in _normalize_items(items):
         pid = it.get("product_id") or it.get("name")
         if not pid:
             continue
@@ -355,7 +384,13 @@ Most-ordered categories: {cat_line}
 LEARNED-HISTORY RULES (READ CAREFULLY — relevance is an ABSOLUTE gate):
 1. SITUATION RELEVANCE COMES FIRST, ALWAYS. Build the cart from items that
    genuinely solve the CURRENT situation. The learned list NEVER changes WHICH
-   kind of cart you build.
+   kind of cart you build or what the cart_title/situation_understood say.
+   
+   CRITICAL: The situation comes from the user's CURRENT message, not from
+   what they bought before. If user says "shaam ho gayi kuch khane ka man",
+   that's an evening snacks situation — NOT a power-cut situation even if
+   they often order candles.
+
 2. A learned item may ONLY appear in the cart if it would already belong there
    on its own merits for THIS situation. If the item does not fit the
    situation's theme, DO NOT include it — no matter how many times it was bought.
@@ -363,6 +398,8 @@ LEARNED-HISTORY RULES (READ CAREFULLY — relevance is an ABSOLUTE gate):
    - Festival / Rakhi / Pooja → do NOT add naan, paneer, cola, namkeen, noodles.
    - Health / fever → do NOT add any food, drinks, or non-medical items.
    - Stationery / exam → do NOT add curries or sweets.
+   - Evening snacks → do NOT add candles/power items just because ordered often.
+   
 3. Use learned history ONLY to choose BETWEEN two items that both already fit
    the situation (e.g. prefer the user's usual cola brand among drinks), or to
    add ONE clearly-relevant favorite.
@@ -475,34 +512,38 @@ STEP 1 — IDENTIFY THE PRIMARY ACTIONABLE PROBLEM
 Read the message carefully. The user may mention multiple things, but ONE
 is the actual problem to solve. Others are context.
 
+CRITICAL: The cart title and situation_understood must reflect the CURRENT
+user_text ONLY. Past order history is used ONLY to personalize item selection
+— NEVER to determine the situation type.
+
+Example: If user says "shaam ho gayi kuch khane ka man", the title must be
+evening/snacks related, NOT "Power Cut Kit" even if they often order candles.
+The situation comes from THIS message, not from what they bought before.
+
 Examples:
 - "light chali gayi, monsoon hai bahar" → PRIMARY: power cut.
   Cart theme = Power Cut Kit.
 - "bukhar lag raha hai, kal exam hai" → PRIMARY: fever/cold relief.
   Cart theme = Cold & Cough Kit.
+- "shaam ho gayi kuch khane ka man" → PRIMARY: evening hunger/snacks.
+  Cart theme = Evening Snacks, NOT anything from order history.
 
-STEP 2 — DECIDE RESPONSE TYPE (MUTUALLY EXCLUSIVE)
+STEP 2 — DECIDE RESPONSE TYPE (BINARY — EXACTLY TWO OPTIONS)
 
 MODE A: "confident"
-USE WHEN: situation clear AND you can pick at least 3 RELEVANT items with
-confidence >= 0.7. Aim for 3-6 items, but include ONLY items that genuinely
+USE WHEN: the situation is clear enough to pick at least 3 RELEVANT items with
+confidence >= 0.6. Aim for 3-6 items, but include ONLY items that genuinely
 fit — a tight 3-item cart beats a padded 6-item one.
-OUTPUT: cart_title named after primary problem; clarifying_question MUST be null.
+OUTPUT: cart_title named after the primary problem; clarifying_question MUST be null.
 
-MODE B: "best_guess"
-USE WHEN: message implies SOME direction but is partially underspecified,
-OR the catalog only partially covers the need.
-OUTPUT: tentative cart_title; 2-4 items confidence 0.5-0.7;
-situation_understood states your assumption clearly;
-clarifying_question MUST be null.
-
-MODE C: "clarifying_question"
-USE WHEN: message is too vague ("kuch chahiye", "help karo") OR you cannot
-reach 0.6 confidence even with a guess.
+MODE B: "clarifying_question"
+USE WHEN: the message is too vague ("kuch chahiye", "help karo") OR you cannot
+honestly pick at least 3 relevant items at confidence >= 0.6.
 OUTPUT: cart_title null; items empty list; ONE short specific clarifying_question.
 
-CONFIDENCE FLOOR: If you cannot honestly assign confidence >= 0.6 to items,
-switch to clarifying_question mode.
+CONFIDENCE FLOOR (HARD GATE): 0.6. There is NO middle "best guess" option.
+Either you are confident enough to build a real cart (MODE A), or you ask ONE
+question (MODE B). Never return a half-sure cart.
 
 STEP 3 — ITEM SELECTION GUIDANCE
 
@@ -512,10 +553,17 @@ STEP 3 — ITEM SELECTION GUIDANCE
 - If the catalog has NO good match for the core need (e.g. user asks for a
   remote battery but no battery exists), do NOT substitute unrelated items
   like food or drinks. Instead either return only the items that genuinely
-  fit, or use best_guess / clarifying_question. An honest small or empty cart
+  fit, or use clarifying_question. An honest small or empty cart
   is better than a wrong one.
 - Do NOT include an item just because the user ordered it before. Past orders
   never justify an item that doesn't fit the current situation.
+- MEDICAL / OTC ITEMS ARE GATED: never add OTC or medical products (Crocin,
+  Vicks, Strepsils, ORS, honey-for-throat, ginger tea, tissues, etc.) to ANY
+  cart UNLESS the user's CURRENT message explicitly mentions a health symptom
+  (fever, cold, cough, sore throat, body ache, headache, stomach upset, sick,
+  unwell). A power cut, guests, pooja, or exam night is NOT a health situation.
+  This overrides personalization and learned history — a favorite/often-bought
+  medicine must still be left out if there is no symptom in THIS message.
 - Theme hints:
   - Power Cut: candles, LED bulb, power bank, instant food (Maggi), cold drinks.
   - Health/Fever/Cold: OTC items (Vicks, Strepsils, Crocin, ORS, honey, ginger tea, tissues).
@@ -538,7 +586,7 @@ Otherwise set safety_note to null. NEVER suggest dosages. NEVER diagnose.
 STEP 5 — DELIVERY NOTE RULE (STRICT MATH)
 
 ONLY set delivery_note if BOTH:
-  (a) response_type is "confident" or "best_guess"
+  (a) response_type is "confident"
   (b) at least ONE item has eta_min STRICTLY GREATER THAN 20 (21+).
 
 If no item exceeds eta_min 20, set delivery_note to null. Items with
@@ -551,7 +599,7 @@ mins — remove it if you need everything faster."
 OUTPUT FORMAT — STRICT JSON ONLY, no markdown, no code fences:
 
 {{
-  "response_type": "confident" | "best_guess" | "clarifying_question",
+  "response_type": "confident" | "clarifying_question",
   "cart_title": "string or null",
   "situation_understood": "one sentence",
   "clarifying_question": "string or null",
@@ -726,14 +774,18 @@ def apply_personalization_flags(result, user_profile):
             if matched_brand:
                 item["personalized"] = True
                 any_personalized = True
-                reason = item.get("reason", "")
-                if matched_brand.lower() not in reason.lower():
-                    item["reason"] = f"{reason} {matched_brand} — your usual choice."
+                reason = (item.get("reason") or "").strip()
+                rl = reason.lower()
+                # Only add our acknowledgement if the model didn't already say
+                # it (avoids "...your usual choice. Maggi — your usual choice.")
+                if matched_brand.lower() not in rl and "usual choice" not in rl:
+                    item["reason"] = f"{reason} {matched_brand} — your usual choice.".strip()
             elif pid in learned_ids:
                 item["personalized"] = True
                 any_personalized = True
-                reason = item.get("reason", "")
-                if "order" not in reason.lower():
+                reason = (item.get("reason") or "").strip()
+                rl = reason.lower()
+                if "order this often" not in rl and "you order" not in rl:
                     item["reason"] = f"{reason} You order this often.".strip()
             else:
                 item.setdefault("personalized", False)
@@ -778,6 +830,32 @@ def fix_safety_note(cart):
     note = cart.get("safety_note")
     if note is not None and note != STANDARD_SAFETY_NOTE:
         cart["safety_note"] = None
+    return cart
+
+
+def mentions_health_symptom(user_text):
+    text = (user_text or "").lower()
+    return any(kw in text for kw in HEALTH_KEYWORDS)
+
+
+def strip_medical_when_no_symptom(cart, user_text, catalog):
+    """
+    Deterministic guard: items in the 'health' category (Crocin, Vicks,
+    Strepsils, etc.) may ONLY appear when the user's message mentions a health
+    symptom. Removes any that slipped in despite the prompt (commonly a
+    favorite/often-bought medicine pulled in by personalization) and recomputes
+    the total. Code guarantees the rule; the model is only asked to follow it.
+    """
+    if mentions_health_symptom(user_text):
+        return cart
+    items = cart.get("items")
+    if not items:
+        return cart
+    cat_by_id = {p["product_id"]: p.get("category") for p in catalog}
+    kept = [it for it in items if cat_by_id.get(it.get("product_id")) != "health"]
+    if len(kept) != len(items):
+        cart["items"] = kept
+        cart["total_inr"] = sum(int(i.get("price_inr", 0) or 0) for i in kept)
     return cart
 
 
@@ -881,6 +959,14 @@ def lambda_handler(event, context):
             raw_output = call_bedrock(prompt, max_tokens=1800)
 
         result = parse_model_output(raw_output)
+
+        # Deterministic guard: drop medical/OTC items if no symptom mentioned.
+        if "items" in result:
+            strip_medical_when_no_symptom(result, user_text, catalog)
+        elif "carts" in result:
+            for cart in result["carts"]:
+                strip_medical_when_no_symptom(cart, user_text, catalog)
+
         result = apply_personalization_flags(result, user_profile)
 
         if "items" in result:

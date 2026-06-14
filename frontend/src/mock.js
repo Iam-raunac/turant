@@ -175,14 +175,14 @@ const DINNER = {
 };
 
 const POOJA = {
-  response_type: "best_guess",
-  cart_title: "Pooja Saamagri (best guess)",
-  situation_understood: "Assuming a small pooja — common essentials.",
+  response_type: "confident",
+  cart_title: "Pooja Saamagri",
+  situation_understood: "A small pooja at home — the common essentials.",
   clarifying_question: null,
   items: [
-    { product_id: "P030", name: "Diyas (pack of 12)", reason: "For the evening aarti", confidence: 0.65, price_inr: 60, eta_min: 18, personalized: false },
-    { product_id: "P032", name: "Agarbatti Pack", reason: "Fragrance for the space", confidence: 0.6, price_inr: 80, eta_min: 18, personalized: false },
-    { product_id: "P035", name: "Marigold Flowers", reason: "Decoration and offering", confidence: 0.55, price_inr: 50, eta_min: 18, personalized: false },
+    { product_id: "P030", name: "Diyas (pack of 12)", reason: "For the evening aarti", confidence: 0.82, price_inr: 60, eta_min: 18, personalized: false },
+    { product_id: "P032", name: "Agarbatti Pack", reason: "Fragrance for the space", confidence: 0.78, price_inr: 80, eta_min: 18, personalized: false },
+    { product_id: "P035", name: "Marigold Flowers", reason: "Decoration and offering", confidence: 0.72, price_inr: 50, eta_min: 18, personalized: false },
   ],
   safety_note: null, delivery_note: null, personalization_applied: false, total_inr: 190,
 };
@@ -225,7 +225,9 @@ function applyLearning(cart, userId) {
       const hit = learned.find((l) => l.product_id === it.product_id);
       if (hit) {
         it.personalized = true;
-        it.reason = `${it.reason} You order this often (${hit.count}×).`;
+        if (!/order this often|you order/i.test(it.reason || "")) {
+          it.reason = `${it.reason} You order this often (${hit.count}×).`;
+        }
         cart.personalization_applied = true;
       }
     });
@@ -236,6 +238,15 @@ function applyLearning(cart, userId) {
 }
 
 // ---- exported mock actions --------------------------------------------------
+
+// Accept items as bare id strings (["P001"]) or dicts and always yield dicts,
+// mirroring the backend's _normalize_items so neither format breaks learning.
+function normalizeItems(items) {
+  return (items || [])
+    .map((it) => (typeof it === "string" ? { product_id: it, name: it } : it))
+    .filter((it) => it && typeof it === "object");
+}
+
 export async function mockGenerate(payload) {
   await new Promise((r) => setTimeout(r, 500));
   const text = payload.user_text || "";
@@ -265,7 +276,7 @@ export async function mockRecordOrder(payload) {
   hist.order_count += 1;
   hist.item_last_ordered = hist.item_last_ordered || {};
   const now = Math.floor(Date.now() / 1000);
-  (payload.items || []).forEach((it) => {
+  normalizeItems(payload.items).forEach((it) => {
     const pid = it.product_id || it.name;
     if (!pid) return;
     hist.item_counts[pid] = (hist.item_counts[pid] || 0) + 1;
@@ -307,7 +318,7 @@ export async function mockRecordRemoval(payload) {
   const uid = payload.user_id;
   const hist = loadHistory(uid);
   hist.disliked_items = hist.disliked_items || {};
-  (payload.items || []).forEach((it) => {
+  normalizeItems(payload.items).forEach((it) => {
     const pid = it.product_id || it.name;
     if (!pid) return;
     const entry = hist.disliked_items[pid] || { name: it.name || pid, count: 0 };

@@ -297,19 +297,6 @@ export default function App() {
               />
             )}
 
-            {result.response_type === "best_guess" && (
-              <>
-                <SmartSubstitution
-                  cart={result}
-                  onApply={applySubstitute}
-                  onDrop={dropItem}
-                />
-                <Cart cart={result} variant="best_guess" onOrder={() => placeOrder(result)} onRemove={removeItem} />
-                {feedbackNote && <div className="feedback-note">{feedbackNote}</div>}
-                <RefineBar onRefine={refine} />
-              </>
-            )}
-
             {result.response_type === "confident" && (
               <>
                 <SmartSubstitution

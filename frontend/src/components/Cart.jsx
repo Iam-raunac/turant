@@ -76,9 +76,6 @@ export default function Cart({ cart, variant, onOrder, onRemove, compact }) {
       <header className="cart-header">
         <div className="cart-title-block">
           <h2 className="cart-title">{cart.cart_title}</h2>
-          {variant === "best_guess" && (
-            <span className="cart-pill pill-amber">Best guess</span>
-          )}
           {variant === "confident" && (
             <span className="cart-pill pill-green">Confident</span>
           )}
